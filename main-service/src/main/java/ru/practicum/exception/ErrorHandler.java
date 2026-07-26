@@ -1,9 +1,9 @@
 package ru.practicum.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,18 +38,20 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handle(final MethodArgumentTypeMismatchException e) {
+    public ApiError handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
         log.warn("400 Bad Request: {}", e.getMessage());
         return new ApiError(
                 HttpStatus.BAD_REQUEST,
                 "Incorrectly made request.",
-                e.getMessage()
+                "Required request parameter '" + e.getParameterName() + "' is not present"
         );
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class,
+            ValidationException.class,
+            jakarta.validation.ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handle(ValidationException e) {
+    public ApiError handle(final Exception e) {
         log.warn("400 Bad Request: {}", e.getMessage());
         return new ApiError(
                 HttpStatus.BAD_REQUEST,
@@ -71,7 +73,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handle(ConstraintViolationException e) {
+    public ApiError handle(org.hibernate.exception.ConstraintViolationException e) {
         log.warn("409 Conflict: {}", e.getMessage());
         return new ApiError(
                 HttpStatus.CONFLICT,

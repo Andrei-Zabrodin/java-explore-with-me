@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.CategoryDto;
-import ru.practicum.dto.NewCategoryDto;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.category.NewCategoryDto;
 import ru.practicum.service.adm.AdminCategoryService;
 
 @RestController
@@ -24,7 +24,7 @@ public class AdminCategoryController {
     }
 
     @PatchMapping("/{catId}")
-    public CategoryDto updateCategory( @PathVariable Long catId,
+    public CategoryDto updateCategory(@PathVariable Long catId,
                                        @Valid @RequestBody NewCategoryDto dto) {
         log.info("PATCH /admin/categories/{} - обновление категории с названием: {}", catId, dto.getName());
         return adminCategoryService.updateCategory(catId, dto);

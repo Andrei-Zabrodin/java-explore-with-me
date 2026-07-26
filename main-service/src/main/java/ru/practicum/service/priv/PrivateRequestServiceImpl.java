@@ -10,6 +10,10 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.*;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventState;
+import ru.practicum.model.request.ParticipationRequest;
+import ru.practicum.model.request.RequestState;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
 import ru.practicum.repository.UserRepository;
@@ -28,6 +32,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     private final RequestMapper requestMapper;
 
     public List<ParticipationRequestDto> getRequestsByUser(Long userId) {
+        // Проверяем, что пользователь существует
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
 
@@ -68,10 +73,11 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
 
-        // Проверяем, что событие существует и опубликовано
+        // Проверяем, что событие существует
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
+        // Проверяем, что событие опубликовано
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Cannot participate in unpublished event");
         }
@@ -154,7 +160,6 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (requests.size() != request.getRequestIds().size()) {
             throw new NotFoundException("Some requests were not found");
         }
-
         for (ParticipationRequest req : requests) {
             if (!req.getEvent().getId().equals(eventId)) {
                 throw new ConflictException("Request does not belong to this event");

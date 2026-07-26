@@ -2,11 +2,11 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.practicum.dto.CompilationDto;
-import ru.practicum.dto.NewCompilationDto;
+import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.model.Compilation;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface CompilationMapper {
     CompilationDto convertToDto(Compilation entity);
 

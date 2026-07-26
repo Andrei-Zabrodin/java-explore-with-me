@@ -9,12 +9,11 @@ import java.time.LocalDateTime;
 
 @Data
 public class EndpointHitDto {
-    private Long id;
 
     @NotBlank(message = "Название приложение должно быть заполнено")
     private String app;
 
-    @NotBlank(message = "URI не должен быть заполнен")
+    @NotBlank(message = "URI должен быть заполнен")
     private String uri;
 
     @NotBlank(message = "IP-адрес пользователя должен быть заполнен")

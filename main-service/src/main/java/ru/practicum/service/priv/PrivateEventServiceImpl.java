@@ -6,22 +6,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.UpdateEventUserRequest;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.dto.event.UpdateEventUserRequest;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.UserRepository;
-import ru.practicum.service.ViewsService;
+import ru.practicum.service.EventEnrichmentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +34,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final ViewsService viewsService;
+    private final EventEnrichmentService eventEnrichmentService;
     private final EventMapper eventMapper;
 
     @Override
@@ -45,7 +45,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> page = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        return viewsService.createShortDtosWithViews(page.getContent());
+        return eventEnrichmentService.enrichShortList(page.getContent());
     }
 
     @Override
@@ -65,12 +65,11 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         event.setCategory(category);
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
-        event.setConfirmedRequests(0L);
 
         Event savedEvent = eventRepository.save(event);
         log.info("User {} created event with id: {}", userId, savedEvent.getId());
 
-        return viewsService.createFullDtoWithViews(savedEvent);
+        return eventEnrichmentService.enrichFull(savedEvent);
     }
 
     @Override
@@ -87,7 +86,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         log.info("User {} requested event with id: {}", userId, eventId);
 
-        return viewsService.createFullDtoWithViews(event);
+        return eventEnrichmentService.enrichFull(event);
     }
 
     @Override
@@ -145,6 +144,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("User {} updated event with id: {}", userId, updatedEvent.getId());
 
-        return viewsService.createFullDtoWithViews(updatedEvent);
+        return eventEnrichmentService.enrichFull(updatedEvent);
     }
 }

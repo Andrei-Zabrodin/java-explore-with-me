@@ -2,10 +2,10 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.practicum.dto.ParticipationRequestDto;
-import ru.practicum.model.ParticipationRequest;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.model.request.ParticipationRequest;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface RequestMapper {
 
     @Mapping(target = "event", source = "event.id")

@@ -118,24 +118,24 @@ class StatsControllerTest {
     }
 
     @Test
-    void getStatsShouldReturnBadRequestWhenStartIsMissing() throws Exception {
-        mockMvc.perform(get("/stats")
-                        .param("end", end.format(FORMATTER)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void getStatsShouldReturnBadRequestWhenEndIsMissing() throws Exception {
-        mockMvc.perform(get("/stats")
-                        .param("start", start.format(FORMATTER)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void getStatsShouldReturnBadRequestWhenStartHasInvalidFormat() throws Exception {
         mockMvc.perform(get("/stats")
                         .param("start", "2026-07-18")
                         .param("end", end.format(FORMATTER)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getStatsShouldReturnBadRequestWhenStartIsNull() throws Exception {
+        mockMvc.perform(get("/stats")
+                        .param("end", end.format(FORMATTER)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getStatsShouldReturnBadRequestWhenEndIsNull() throws Exception {
+        mockMvc.perform(get("/stats")
+                        .param("start", start.format(FORMATTER)))
                 .andExpect(status().isBadRequest());
     }
 

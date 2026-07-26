@@ -4,8 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import org.springframework.data.repository.query.Param;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,25 +15,34 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     boolean existsByCategoryId(Long catId);
 
     @Query("SELECT e FROM Event e " +
-            "WHERE (?1 IS NULL OR e.initiator.id IN ?1) " +
-            "AND (?2 IS NULL OR e.state IN ?2) " +
-            "AND (?3 IS NULL OR e.category.id IN ?3) " +
-            "AND (?4 IS NULL OR e.eventDate >= ?4) " +
-            "AND (?5 IS NULL OR e.eventDate <= ?5)")
-    Page<Event> findEventsByAdminFilters(List<Long> users, List<EventState> states, List<Long> categories,
-            LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable pageable);
+            "WHERE (:users IS NULL OR e.initiator.id IN :users) " +
+            "AND (:states IS NULL OR e.state IN :states) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories) " +
+            "AND (CAST(:start AS timestamp) IS NULL OR e.eventDate >= :start) " +
+            "AND (CAST(:end AS timestamp) IS NULL OR e.eventDate <= :end)")
+    Page<Event> findEventsByAdminFilters(@Param("users") List<Long> users,
+                                         @Param("states") List<EventState> states,
+                                         @Param("categories") List<Long> categories,
+                                         @Param("start") LocalDateTime rangeStart,
+                                         @Param("end") LocalDateTime rangeEnd,
+                                         Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
             "WHERE e.state = 'PUBLISHED' " +
-            "AND (?1 IS NULL OR LOWER(e.annotation) LIKE LOWER(CONCAT('%', ?1, '%')) " +
-            "OR LOWER(e.description) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
-            "AND (?2 IS NULL OR e.category.id IN ?2) " +
-            "AND (?3 IS NULL OR e.paid = ?3) " +
-            "AND (?4 IS NULL OR e.eventDate >= ?4) " +
-            "AND (?5 IS NULL OR e.eventDate <= ?5) " +
-            "AND (?6 = false OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)")
-    Page<Event> findEventsByPublicFilters(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
-            LocalDateTime rangeEnd, Boolean onlyAvailable, Pageable pageable);
+            "AND (CAST(:text AS text) IS NULL OR LOWER(e.annotation) LIKE LOWER(CONCAT('%', CAST(:text AS text), '%')) " +
+            "OR LOWER(e.description) LIKE LOWER(CONCAT('%', CAST(:text AS text), '%'))) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories) " +
+            "AND (CAST(:paid AS boolean) IS NULL OR e.paid = :paid) " +
+            "AND (CAST(:start AS timestamp) IS NULL OR e.eventDate >= :start) " +
+            "AND (CAST(:end AS timestamp) IS NULL OR e.eventDate <= :end) " +
+            "AND (:available = false OR e.participantLimit = 0)")
+    Page<Event> findEventsByPublicFilters(@Param("text") String text,
+                                          @Param("categories") List<Long> categories,
+                                          @Param("paid") Boolean paid,
+                                          @Param("start") LocalDateTime rangeStart,
+                                          @Param("end") LocalDateTime rangeEnd,
+                                          @Param("available") Boolean onlyAvailable,
+                                          Pageable pageable);
 
     Page<Event> findAllByInitiatorId(Long userId, Pageable pageable);
 }

@@ -1,12 +1,15 @@
 package ru.practicum.controller.adm;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.NewUserRequest;
-import ru.practicum.dto.UserDto;
+import ru.practicum.dto.user.NewUserRequest;
+import ru.practicum.dto.user.UserDto;
 import ru.practicum.service.adm.AdminUserService;
 
 import java.util.List;
@@ -15,13 +18,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/admin/users")
 @Slf4j
+@Validated
 public class AdminUserController {
     private final AdminUserService adminUserService;
 
     @GetMapping
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
-                            @RequestParam(defaultValue = "0") int from,
-                            @RequestParam(defaultValue = "10") int size) {
+                            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                            @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("GET /admin/users - получение пользователей c параметрами ids={}, from={}, size={}", ids, from, size);
         return adminUserService.getUsers(ids, from, size);
     }

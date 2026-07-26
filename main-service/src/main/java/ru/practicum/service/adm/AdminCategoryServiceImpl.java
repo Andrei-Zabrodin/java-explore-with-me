@@ -3,8 +3,8 @@ package ru.practicum.service.adm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.dto.CategoryDto;
-import ru.practicum.dto.NewCategoryDto;
+import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.category.NewCategoryDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CategoryMapper;
@@ -23,7 +23,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService {
 
     @Override
     public CategoryDto createCategory(NewCategoryDto dto) {
-        if(categoryRepository.existsByName(dto.getName())) {
+        if (categoryRepository.existsByName(dto.getName())) {
             throw new ConflictException("Category with name '" + dto.getName() + "' already exists");
         }
 

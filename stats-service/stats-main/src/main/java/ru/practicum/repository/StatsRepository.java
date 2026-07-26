@@ -2,6 +2,7 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.model.EndpointHit;
 import ru.practicum.model.ViewStats;
 
@@ -10,32 +11,36 @@ import java.util.List;
 
 public interface StatsRepository extends JpaRepository<EndpointHit, Long> {
     @Query("SELECT eh.app AS app, eh.uri AS uri, COUNT(eh.ip) AS hits FROM EndpointHit AS eh " +
-            "WHERE (?1 IS NULL OR eh.timestamp >= ?1) " +
-            "AND (?2 IS NULL OR eh.timestamp <= ?2) " +
+            "WHERE eh.timestamp >= :start " +
+            "AND eh.timestamp <= :end " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY hits DESC")
-    List<ViewStats> findAllHits(LocalDateTime start, LocalDateTime end);
+    List<ViewStats> findAllHits(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT eh.app AS app, eh.uri AS uri, COUNT(DISTINCT eh.ip) AS hits FROM EndpointHit AS eh " +
-            "WHERE (?1 IS NULL OR eh.timestamp >= ?1) " +
-            "AND (?2 IS NULL OR eh.timestamp <= ?2) " +
+            "WHERE eh.timestamp >= :start " +
+            "AND eh.timestamp <= :end " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY hits DESC")
-    List<ViewStats> findAllUniqueIpHits(LocalDateTime start, LocalDateTime end);
+    List<ViewStats> findAllUniqueIpHits(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT eh.app AS app, eh.uri AS uri, COUNT(eh.ip) AS hits FROM EndpointHit AS eh " +
-            "WHERE (?1 IS NULL OR eh.timestamp >= ?1) " +
-            "AND (?2 IS NULL OR eh.timestamp <= ?2) " +
-            "AND eh.uri IN ?3 " +
+            "WHERE eh.timestamp >= :start " +
+            "AND eh.timestamp <= :end " +
+            "AND eh.uri IN :uris " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY hits DESC")
-    List<ViewStats> findAllHitsByUri(LocalDateTime start, LocalDateTime end, List<String> uris);
+    List<ViewStats> findAllHitsByUri(@Param("start") LocalDateTime start,
+                                     @Param("end") LocalDateTime end,
+                                     @Param("uris") List<String> uris);
 
     @Query("SELECT eh.app AS app, eh.uri AS uri, COUNT(DISTINCT eh.ip) AS hits FROM EndpointHit AS eh " +
-            "WHERE (?1 IS NULL OR eh.timestamp >= ?1) " +
-            "AND (?2 IS NULL OR eh.timestamp <= ?2) " +
-            "AND eh.uri IN ?3 " +
+            "WHERE eh.timestamp >= :start " +
+            "AND eh.timestamp <= :end " +
+            "AND eh.uri IN :uris " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY hits DESC")
-    List<ViewStats> findAllUniqueIpHitsByUri(LocalDateTime start, LocalDateTime end, List<String> uris);
+    List<ViewStats> findAllUniqueIpHitsByUri(@Param("start") LocalDateTime start,
+                                             @Param("end") LocalDateTime end,
+                                             @Param("uris") List<String> uris);
 }

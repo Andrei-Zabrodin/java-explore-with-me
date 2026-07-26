@@ -1,8 +1,8 @@
 package ru.practicum.service.pub;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.model.SortByType;
 
 import java.time.LocalDateTime;

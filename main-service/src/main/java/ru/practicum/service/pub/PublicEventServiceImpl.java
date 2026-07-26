@@ -8,13 +8,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventState;
 import ru.practicum.model.SortByType;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.service.EventEnrichmentService;
 import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ import java.util.List;
 public class PublicEventServiceImpl implements PublicEventService {
     private final EventRepository eventRepository;
     private final ViewsService viewsService;
+    private final EventEnrichmentService eventEnrichmentService;
 
     @Override
     public List<EventShortDto> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
@@ -45,7 +47,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return viewsService.createShortDtosWithViews(events, rangeStart, rangeEnd);
+        return eventEnrichmentService.enrichShortList(events, rangeStart, rangeEnd);
     }
 
     @Override
@@ -57,10 +59,10 @@ public class PublicEventServiceImpl implements PublicEventService {
             throw new NotFoundException("Event with id=" + id + " is not yet published");
         }
 
-        // Отправляем статистику
+        // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return viewsService.createFullDtoWithViews(event);
+        return eventEnrichmentService.enrichFull(event);
     }
 
     private Sort getSort(SortByType sortBy) {

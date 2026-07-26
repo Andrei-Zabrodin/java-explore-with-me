@@ -1,9 +1,12 @@
 package ru.practicum.controller.priv;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
@@ -21,14 +24,15 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/users/{userId}/events")
 @Slf4j
+@Validated
 public class PrivateEventController {
     private final PrivateEventService privateEventService;
     private final PrivateRequestService privateRequestService;
 
     @GetMapping
     public List<EventShortDto> getEventsByUser(@PathVariable Long userId,
-                                         @RequestParam(defaultValue = "0") int from,
-                                         @RequestParam(defaultValue = "10") int size) {
+                                         @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                         @RequestParam(defaultValue = "10") @Positive int size) {
 
         log.info("GET /users/{}/events - получение событий пользователя", userId);
         return privateEventService.getEventsByUser(userId, from, size);

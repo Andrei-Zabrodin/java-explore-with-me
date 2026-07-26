@@ -32,7 +32,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        if (start.isAfter(end)) {
+        if (start != null && end != null && start.isAfter(end)) {
             throw new ValidationException("Дата начала диапазона выгрузки должна быть не позже даты конца");
         }
 

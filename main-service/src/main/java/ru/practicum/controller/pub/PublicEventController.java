@@ -1,12 +1,15 @@
 package ru.practicum.controller.pub;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.model.SortByType;
 import ru.practicum.service.pub.PublicEventService;
 
@@ -17,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/events")
 @Slf4j
+@Validated
 public class PublicEventController {
     private final PublicEventService publicEventService;
 
@@ -29,8 +33,8 @@ public class PublicEventController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) SortByType sortBy,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+            @RequestParam(defaultValue = "10") @Positive int size,
             HttpServletRequest request) {
 
         log.info("GET /events - поиск событий с параметрами text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}",

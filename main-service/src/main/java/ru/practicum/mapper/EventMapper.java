@@ -2,12 +2,12 @@ package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.model.Event;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.model.event.Event;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface EventMapper {
 
     @Mapping(target = "location.lat", source = "lat")
@@ -18,6 +18,7 @@ public interface EventMapper {
 
     @Mapping(target = "lat", source = "location.lat")
     @Mapping(target = "lon", source = "location.lon")
+    @Mapping(target = "category", ignore = true)
     Event convertToEntity(NewEventDto dto);
 
 }

@@ -6,17 +6,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.UpdateEventAdminRequest;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
-import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import ru.practicum.model.event.Event;
+import ru.practicum.model.event.EventState;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.service.EventEnrichmentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.Optional;
 public class AdminEventServiceImpl implements AdminEventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final EventMapper eventMapper;
+    private final EventEnrichmentService eventEnrichmentService;
 
 
     @Override
@@ -56,9 +56,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                 pageable
         );
 
-        return page.getContent().stream()
-                .map(eventMapper::convertToFullDto)
-                .toList();
+        return eventEnrichmentService.enrichFullList(page.getContent());
     }
 
     @Override
@@ -85,7 +83,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                     if (event.getState() == EventState.PUBLISHED) {
                         throw new ConflictException("Cannot reject the event because it's not in the right state: " + event.getState());
                     }
-                    event.setState(EventState.CANCELED);
+                    event.setState(EventState.REJECTED);
                     break;
 
                 default:
@@ -122,6 +120,6 @@ public class AdminEventServiceImpl implements AdminEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("Admin updated event with id: {}", updatedEvent.getId());
 
-        return eventMapper.convertToFullDto(updatedEvent);
+        return eventEnrichmentService.enrichFull(updatedEvent);
     }
 }
