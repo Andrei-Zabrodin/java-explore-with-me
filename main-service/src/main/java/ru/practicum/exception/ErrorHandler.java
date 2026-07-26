@@ -49,6 +49,17 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handle(ConflictException e) {
+        log.warn("409 Conflict: {}", e.getMessage());
+        return new ApiError(
+                HttpStatus.CONFLICT,
+                "For the requested operation the conditions are not met.",
+                e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handle(ConstraintViolationException e) {
         log.warn("409 Conflict: {}", e.getMessage());
         return new ApiError(
