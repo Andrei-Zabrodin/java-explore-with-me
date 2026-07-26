@@ -5,11 +5,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.UpdateEventUserRequest;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.request.EventRequestStatusUpdateResult;
+import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.priv.PrivateEventService;
+import ru.practicum.service.priv.PrivateRequestService;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ import java.util.List;
 @Slf4j
 public class PrivateEventController {
     private final PrivateEventService privateEventService;
+    private final PrivateRequestService privateRequestService;
 
     @GetMapping
     public List<EventShortDto> getEventsByUser(@PathVariable Long userId,
@@ -35,6 +40,12 @@ public class PrivateEventController {
         return privateEventService.getEventById(userId, eventId);
     }
 
+    @GetMapping("/{eventId}/requests")
+    public List<ParticipationRequestDto> getRequestsByEventOwner(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("GET /users/{}/events/{}/requests - получение заявок на событие", userId, eventId);
+        return privateRequestService.getRequestsByEventOwner(userId, eventId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createEvent(@PathVariable Long userId, @Valid @RequestBody NewEventDto dto) {
@@ -49,6 +60,15 @@ public class PrivateEventController {
             @Valid @RequestBody UpdateEventUserRequest request) {
         log.info("PATCH /users/{}/events/{} - обновление события пользователем", userId, eventId);
         return privateEventService.updateEvent(userId, eventId, request);
+    }
+
+    @PatchMapping("/{eventId}/requests")
+    public EventRequestStatusUpdateResult updateRequestStatus(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @Valid @RequestBody EventRequestStatusUpdateRequest request) {
+        log.info("PATCH /users/{}/events/{}/requests - изменение статуса заявок", userId, eventId);
+        return privateRequestService.updateRequestStatus(userId, eventId, request);
     }
 
 }
