@@ -48,6 +48,17 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handle(ValidationException e) {
+        log.warn("400 Bad Request: {}", e.getMessage());
+        return new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Incorrectly made request.",
+                e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handle(ConflictException e) {
         log.warn("409 Conflict: {}", e.getMessage());

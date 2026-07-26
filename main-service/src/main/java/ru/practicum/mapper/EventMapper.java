@@ -16,6 +16,8 @@ public interface EventMapper {
 
     EventShortDto convertToShortDto(Event entity);
 
+    @Mapping(target = "lat", source = "location.lat")
+    @Mapping(target = "lon", source = "location.lon")
     Event convertToEntity(NewEventDto dto);
 
 }

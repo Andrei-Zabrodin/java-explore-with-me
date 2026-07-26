@@ -60,7 +60,4 @@ public class Event {
 
     @Column
     private String title;
-
-    @Column
-    private Long views;
 }

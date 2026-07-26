@@ -15,6 +15,7 @@ import ru.practicum.repository.EventRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -49,14 +50,6 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
 
-        if (request.getTitle() != null) {
-            compilation.setTitle(request.getTitle());
-        }
-
-        if (request.getPinned() != null) {
-            compilation.setPinned(request.getPinned());
-        }
-
         if (request.getEvents() != null) {
             List<Event> events = eventRepository.findAllById(request.getEvents());
             if (events.size() != request.getEvents().size()) {
@@ -64,6 +57,9 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
             }
             compilation.setEvents(events);
         }
+
+        Optional.ofNullable(request.getTitle()).ifPresent(compilation::setTitle);
+        Optional.ofNullable(request.getPinned()).ifPresent(compilation::setPinned);
 
         Compilation updatedComp = compilationRepository.save(compilation);
         log.info("Updated compilation with id: {}", updatedComp.getId());
