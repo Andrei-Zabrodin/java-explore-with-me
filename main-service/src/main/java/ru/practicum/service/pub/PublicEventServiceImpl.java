@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ValidationException;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.SortByType;
@@ -34,6 +35,10 @@ public class PublicEventServiceImpl implements PublicEventService {
                                          LocalDateTime rangeEnd, Boolean onlyAvailable, SortByType sortBy,
                                          int from, int size, HttpServletRequest request) {
 
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new ValidationException("Дата начала диапазона выгрузки должна быть не позже даты конца");
+        }
+
         if (rangeStart == null && rangeEnd == null) {
             rangeStart = LocalDateTime.now();
         }
@@ -52,7 +57,7 @@ public class PublicEventServiceImpl implements PublicEventService {
 
     @Override
     public EventFullDto getEventById(Long id, HttpServletRequest request) {
-        Event event = eventRepository.findById(id)
+        Event event = eventRepository.findByIdWithFetch(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
 
         if (event.getState() != EventState.PUBLISHED) {

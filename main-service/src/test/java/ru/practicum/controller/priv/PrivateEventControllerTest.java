@@ -408,6 +408,19 @@ class PrivateEventControllerTest {
                 .createEvent(anyLong(), any(NewEventDto.class));
     }
 
+    @Test
+    void createEventShouldReturnBadRequestWhenParticipantLimitIsNegative() throws Exception {
+        newEventDto.setParticipantLimit(-1);
+
+        mockMvc.perform(post("/users/{userId}/events", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newEventDto)))
+                .andExpect(status().isBadRequest());
+
+        verify(privateEventService, never())
+                .createEvent(anyLong(), any(NewEventDto.class));
+    }
+
     // ============ PATCH /users/{userId}/events/{eventId} ============
 
     @Test
@@ -551,6 +564,19 @@ class PrivateEventControllerTest {
         mockMvc.perform(patch("/users/{userId}/events/{eventId}", userId, eventId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
+                .andExpect(status().isBadRequest());
+
+        verify(privateEventService, never())
+                .updateEvent(anyLong(), anyLong(), any(UpdateEventUserRequest.class));
+    }
+
+    @Test
+    void updateEventShouldReturnBadRequestWhenParticipantLimitIsNegative() throws Exception {
+        updateEventUserRequest.setParticipantLimit(-1);
+
+        mockMvc.perform(patch("/users/{userId}/events/{eventId}", userId, eventId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateEventUserRequest)))
                 .andExpect(status().isBadRequest());
 
         verify(privateEventService, never())

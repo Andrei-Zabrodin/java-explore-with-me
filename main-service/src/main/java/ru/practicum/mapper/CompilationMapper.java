@@ -8,6 +8,7 @@ import ru.practicum.model.Compilation;
 
 @Mapper(componentModel = "spring")
 public interface CompilationMapper {
+    @Mapping(target = "events", ignore = true)
     CompilationDto convertToDto(Compilation entity);
 
     @Mapping(target = "events", ignore = true)

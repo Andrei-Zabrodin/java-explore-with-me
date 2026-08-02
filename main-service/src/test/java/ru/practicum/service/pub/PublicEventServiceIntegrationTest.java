@@ -12,6 +12,7 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ValidationException;
 import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
@@ -86,6 +87,7 @@ class PublicEventServiceIntegrationTest {
         publishedEvent1.setAnnotation("Published Annotation");
         publishedEvent1.setDescription("Published Description");
         publishedEvent1.setCategory(category1);
+        publishedEvent1.setConfirmedRequests(0L);
         publishedEvent1.setInitiator(user);
         publishedEvent1.setEventDate(LocalDateTime.now().plusDays(5));
         publishedEvent1.setCreatedOn(LocalDateTime.now());
@@ -103,6 +105,7 @@ class PublicEventServiceIntegrationTest {
         publishedEvent2.setAnnotation("Another Published Annotation");
         publishedEvent2.setDescription("Another Published Description");
         publishedEvent2.setCategory(category2);
+        publishedEvent2.setConfirmedRequests(0L);
         publishedEvent2.setInitiator(user);
         publishedEvent2.setEventDate(LocalDateTime.now().plusDays(10));
         publishedEvent2.setCreatedOn(LocalDateTime.now());
@@ -120,6 +123,7 @@ class PublicEventServiceIntegrationTest {
         pendingEvent.setAnnotation("Pending Annotation");
         pendingEvent.setDescription("Pending Description");
         pendingEvent.setCategory(category1);
+        pendingEvent.setConfirmedRequests(0L);
         pendingEvent.setInitiator(user);
         pendingEvent.setEventDate(LocalDateTime.now().plusDays(7));
         pendingEvent.setCreatedOn(LocalDateTime.now());
@@ -185,6 +189,7 @@ class PublicEventServiceIntegrationTest {
         earlierEvent.setAnnotation("Earlier Annotation");
         earlierEvent.setDescription("Earlier Description");
         earlierEvent.setCategory(category1);
+        earlierEvent.setConfirmedRequests(0L);
         earlierEvent.setInitiator(user);
         earlierEvent.setEventDate(LocalDateTime.now().plusDays(1));
         earlierEvent.setCreatedOn(LocalDateTime.now());
@@ -237,6 +242,29 @@ class PublicEventServiceIntegrationTest {
                 null, 2, 1, httpServletRequest);
 
         assertThat(thirdPage).isEmpty();
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenRangeStartAfterRangeEnd() {
+        LocalDateTime start = LocalDateTime.now().plusDays(5);
+        LocalDateTime end = LocalDateTime.now().minusDays(1);
+
+        assertThatThrownBy(() -> publicEventService.getEvents(
+                null, null, null, start, end, false,
+                null, 0, 10, httpServletRequest))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Дата начала диапазона выгрузки должна быть не позже даты конца");
+    }
+
+    @Test
+    void getEventsShouldReturnEventsWhenRangeStartEqualsRangeEnd() {
+        LocalDateTime date = LocalDateTime.now().plusDays(5);
+
+        List<EventShortDto> result = publicEventService.getEvents(
+                null, null, null, date, date, false,
+                null, 0, 10, httpServletRequest);
+
+        assertThat(result).isNotNull();
     }
 
     @Test

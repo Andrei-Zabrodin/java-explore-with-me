@@ -86,6 +86,7 @@ class PrivateEventServiceIntegrationTest {
         event.setAnnotation("Test Annotation");
         event.setDescription("Test Description");
         event.setCategory(category);
+        event.setConfirmedRequests(0L);
         event.setInitiator(user);
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());
@@ -154,6 +155,7 @@ class PrivateEventServiceIntegrationTest {
             extraEvent.setAnnotation("Annotation " + i);
             extraEvent.setDescription("Description " + i);
             extraEvent.setCategory(category);
+            extraEvent.setConfirmedRequests(0L);
             extraEvent.setInitiator(user);
             extraEvent.setEventDate(LocalDateTime.now().plusDays(i + 10));
             extraEvent.setCreatedOn(LocalDateTime.now());

@@ -91,6 +91,7 @@ class PrivateRequestServiceIntegrationTest {
         event.setAnnotation("Test Annotation");
         event.setDescription("Test Description");
         event.setCategory(category);
+        event.setConfirmedRequests(0L);
         event.setInitiator(user);
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());
@@ -109,6 +110,7 @@ class PrivateRequestServiceIntegrationTest {
         newEvent.setAnnotation("New Annotation");
         newEvent.setDescription("New Description");
         newEvent.setCategory(category);
+        newEvent.setConfirmedRequests(0L);
         newEvent.setInitiator(user);
         newEvent.setEventDate(LocalDateTime.now().plusDays(10));
         newEvent.setCreatedOn(LocalDateTime.now());
@@ -221,6 +223,16 @@ class PrivateRequestServiceIntegrationTest {
     }
 
     @Test
+    void createRequestShouldAutoConfirmWhenParticipantLimitZero() {
+        newEvent.setParticipantLimit(0);
+        eventRepository.save(newEvent);
+
+        ParticipationRequestDto result = privateRequestService.createRequest(anotherUser.getId(), newEvent.getId());
+
+        assertThat(result.getStatus()).isEqualTo(RequestState.CONFIRMED);
+    }
+
+    @Test
     void createRequestShouldThrowNotFoundExceptionWhenUserNotFound() {
         Long nonExistentId = 999L;
 
@@ -258,10 +270,8 @@ class PrivateRequestServiceIntegrationTest {
     @Test
     void createRequestShouldThrowConflictExceptionWhenParticipantLimitReached() {
         event.setParticipantLimit(1);
+        event.setConfirmedRequests(1L);
         eventRepository.save(event);
-
-        request.setStatus(RequestState.CONFIRMED);
-        requestRepository.save(request);
 
         assertThatThrownBy(() -> privateRequestService.createRequest(newUser.getId(), event.getId()))
                 .isInstanceOf(ConflictException.class)

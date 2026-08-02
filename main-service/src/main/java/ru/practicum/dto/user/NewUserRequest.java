@@ -12,7 +12,7 @@ public class NewUserRequest {
 
     @NotBlank(message = "Email must not be blank")
     @Email(message = "Wrong email format")
-    @Size(min = 6, max = 264, message = "Email should be between 6 and 264 characters")
+    @Size(min = 6, max = 254, message = "Email should be between 6 and 254 characters")
     private String email;
 
     @NotBlank(message = "Name must not be blank")

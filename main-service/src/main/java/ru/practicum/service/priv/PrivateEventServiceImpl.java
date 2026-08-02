@@ -65,6 +65,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         event.setCategory(category);
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
+        event.setConfirmedRequests(0L);
 
         Event savedEvent = eventRepository.save(event);
         log.info("User {} created event with id: {}", userId, savedEvent.getId());
@@ -77,7 +78,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithFetch(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
         if (!event.getInitiator().getId().equals(userId)) {

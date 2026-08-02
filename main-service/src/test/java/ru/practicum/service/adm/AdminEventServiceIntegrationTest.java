@@ -78,6 +78,7 @@ class AdminEventServiceIntegrationTest {
         event.setAnnotation("Test Annotation");
         event.setDescription("Test Description");
         event.setCategory(category);
+        event.setConfirmedRequests(0L);
         event.setInitiator(initiator);
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());
@@ -144,6 +145,7 @@ class AdminEventServiceIntegrationTest {
             extraEvent.setAnnotation("Annotation " + i);
             extraEvent.setDescription("Description " + i);
             extraEvent.setCategory(category);
+            extraEvent.setConfirmedRequests(0L);
             extraEvent.setInitiator(initiator);
             extraEvent.setEventDate(LocalDateTime.now().plusDays(i + 10));
             extraEvent.setCreatedOn(LocalDateTime.now());
@@ -260,10 +262,10 @@ class AdminEventServiceIntegrationTest {
 
         EventFullDto result = adminEventService.updateEvent(event.getId(), updateRequest);
 
-        assertThat(result.getState()).isEqualTo(EventState.REJECTED);
+        assertThat(result.getState()).isEqualTo(EventState.CANCELED);
 
-        Event updated = eventRepository.findById(event.getId()).orElseThrow();
-        assertThat(updated.getState()).isEqualTo(EventState.REJECTED);
+        Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
+        assertThat(updatedEvent.getState()).isEqualTo(EventState.CANCELED);
     }
 
     @Test

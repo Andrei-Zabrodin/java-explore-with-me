@@ -83,7 +83,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                     if (event.getState() == EventState.PUBLISHED) {
                         throw new ConflictException("Cannot reject the event because it's not in the right state: " + event.getState());
                     }
-                    event.setState(EventState.REJECTED);
+                    event.setState(EventState.CANCELED);
                     break;
 
                 default:

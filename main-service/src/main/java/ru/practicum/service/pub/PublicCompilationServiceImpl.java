@@ -10,6 +10,7 @@ import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CompilationMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.repository.CompilationRepository;
+import ru.practicum.service.CompilationEnrichmentService;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 public class PublicCompilationServiceImpl implements PublicCompilationService {
 
     private final CompilationRepository compilationRepository;
+    private final CompilationEnrichmentService compilationEnrichmentService;
     private final CompilationMapper compilationMapper;
 
     @Override
@@ -33,9 +35,8 @@ public class PublicCompilationServiceImpl implements PublicCompilationService {
         }
 
         log.debug("Найдено подборок: {}", compilations.size());
-        return compilations.stream()
-                .map(compilationMapper::convertToDto)
-                .toList();
+
+        return compilationEnrichmentService.enrichCompilations(compilations);
     }
 
     @Override
@@ -43,6 +44,6 @@ public class PublicCompilationServiceImpl implements PublicCompilationService {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
 
-        return compilationMapper.convertToDto(compilation);
+        return compilationEnrichmentService.enrichCompilation(compilation);
     }
 }

@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatsClient;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
@@ -25,6 +27,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
@@ -45,6 +49,9 @@ class AdminCompilationServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @MockBean
+    private StatsClient statsClient;
+
     private User user;
     private Category category;
     private Event event1;
@@ -54,6 +61,9 @@ class AdminCompilationServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        when(statsClient.getStats(any(), any(), anyList(), anyBoolean()))
+                .thenReturn(List.of());
+
         user = new User();
         user.setEmail("user@example.com");
         user.setName("Test User");
@@ -226,6 +236,7 @@ class AdminCompilationServiceIntegrationTest {
         event.setAnnotation("Annotation " + title);
         event.setDescription("Description " + title);
         event.setCategory(category);
+        event.setConfirmedRequests(0L);
         event.setInitiator(user);
         event.setEventDate(eventDate);
         event.setCreatedOn(LocalDateTime.now());

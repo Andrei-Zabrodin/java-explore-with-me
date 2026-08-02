@@ -12,6 +12,7 @@ import ru.practicum.model.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.service.CompilationEnrichmentService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
+    private final CompilationEnrichmentService compilationEnrichmentService;
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto dto) {
@@ -42,7 +44,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation savedComp = compilationRepository.save(compilation);
         log.info("Created compilation with id: {}", savedComp.getId());
 
-        return compilationMapper.convertToDto(savedComp);
+        return compilationEnrichmentService.enrichCompilationWithGivenEvents(savedComp, events);
     }
 
     @Override
@@ -50,8 +52,9 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
 
+        List<Event> events = null;
         if (request.getEvents() != null) {
-            List<Event> events = eventRepository.findAllById(request.getEvents());
+            events = eventRepository.findAllById(request.getEvents());
             if (events.size() != request.getEvents().size()) {
                 throw new NotFoundException("One or more events were not found");
             }
@@ -64,7 +67,11 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation updatedComp = compilationRepository.save(compilation);
         log.info("Updated compilation with id: {}", updatedComp.getId());
 
-        return compilationMapper.convertToDto(updatedComp);
+        if (events == null)
+            return compilationEnrichmentService.enrichCompilation(updatedComp);
+        else {
+            return compilationEnrichmentService.enrichCompilationWithGivenEvents(updatedComp, events);
+        }
     }
 
     @Override

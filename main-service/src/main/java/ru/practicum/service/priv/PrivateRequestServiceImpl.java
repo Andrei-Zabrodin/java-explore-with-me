@@ -20,7 +20,9 @@ import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
 
-        List<ParticipationRequest> requests = requestRepository.findAllByRequesterId(userId);
+        List<ParticipationRequest> requests = requestRepository.findAllByRequesterIdWithFetch(userId);
         log.debug("Found {} requests for user {}", requests.size(), userId);
 
         return requests.stream()
@@ -59,7 +61,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             throw new NotFoundException("User with id=" + userId + " is not the owner of event with id=" + eventId);
         }
 
-        List<ParticipationRequest> requests = requestRepository.findAllByEventId(eventId);
+        List<ParticipationRequest> requests = requestRepository.findAllByEventIdWithFetch(eventId);
         log.debug("Found {} requests for event {}", requests.size(), eventId);
 
         return requests.stream()
@@ -88,11 +90,8 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         }
 
         // Проверяем, что лимит участников не превышен
-        if (event.getParticipantLimit() > 0) {
-            long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestState.CONFIRMED);
-            if (confirmedRequests >= event.getParticipantLimit()) {
-                throw new ConflictException("Participant limit has been reached");
-            }
+        if (event.getParticipantLimit() > 0 && event.getConfirmedRequests() >= event.getParticipantLimit()) {
+            throw new ConflictException("Participant limit has been reached");
         }
 
         // Проверяем, что пользователь ещё не подавал заявку
@@ -105,9 +104,11 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         request.setEvent(event);
         request.setCreated(LocalDateTime.now());
 
-        // Eсли модерация отключена, сразу подтверждаем заявку
-        if (Boolean.FALSE.equals(event.getRequestModeration())) {
+        // Eсли модерация отключена или предел количества участников события 0, сразу подтверждаем заявку
+        if (Boolean.FALSE.equals(event.getRequestModeration()) || event.getParticipantLimit() == 0) {
             request.setStatus(RequestState.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+            eventRepository.save(event);
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
@@ -126,6 +127,11 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         ParticipationRequest request = requestRepository.findByIdAndRequesterId(requestId, userId)
                 .orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " was not found for user " + userId));
 
+        if (request.getStatus() == RequestState.CONFIRMED) {
+            Event event = request.getEvent();
+            event.setConfirmedRequests(event.getConfirmedRequests() - 1);
+            eventRepository.save(event);
+        }
         request.setStatus(RequestState.CANCELED);
 
         ParticipationRequest savedRequest = requestRepository.save(request);
@@ -169,9 +175,8 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             }
         }
 
-        // Считаем текущее количество подтверждённых заявок
-        long confirmedCount = requestRepository.countByEventIdAndStatus(eventId, RequestState.CONFIRMED);
-        long availableSlots = event.getParticipantLimit() - confirmedCount;
+        // Считаем текущее количество свободных мест
+        long availableSlots = event.getParticipantLimit() - event.getConfirmedRequests();
 
         List<ParticipationRequest> confirmedRequests = new ArrayList<>();
         List<ParticipationRequest> rejectedRequests = new ArrayList<>();
@@ -200,13 +205,20 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             if (availableSlots <= 0) {
                 List<ParticipationRequest> pending = requestRepository
                         .findAllByEventIdAndStatus(eventId, RequestState.PENDING);
+
+                Set<Long> requestIdsSet = new HashSet<>(request.getRequestIds());
                 for (ParticipationRequest req : pending) {
-                    if (!request.getRequestIds().contains(req.getId())) {
+                    if (!requestIdsSet.contains(req.getId())) {
                         req.setStatus(RequestState.REJECTED);
                         rejectedRequests.add(req);
                     }
                 }
             }
+
+            // Сохраняем новое число подтверждённых заявок
+            long newConfirmedCount = event.getParticipantLimit() - availableSlots;
+            event.setConfirmedRequests(newConfirmedCount);
+            eventRepository.save(event);
 
         } else if (request.getStatus() == RequestState.REJECTED) {
             // Отклоняем все указанные заявки

@@ -155,6 +155,7 @@ class AdminCategoryServiceIntegrationTest {
         event.setAnnotation("Тестовая аннотация");
         event.setDescription("Тестовое описание");
         event.setCategory(existingCategory);
+        event.setConfirmedRequests(0L);
         event.setInitiator(user);
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());

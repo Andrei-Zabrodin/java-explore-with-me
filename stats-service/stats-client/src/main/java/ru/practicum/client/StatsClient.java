@@ -38,10 +38,10 @@ public class StatsClient {
                 .path("/stats");
 
         if (start != null) {
-            builder.queryParam("start");
+            builder.queryParam("start", start);
         }
         if (end != null) {
-            builder.queryParam("end");
+            builder.queryParam("end", end);
         }
         if (uris != null && !uris.isEmpty()) {
             builder.queryParam("uris", uris);
