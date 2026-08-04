@@ -11,12 +11,12 @@ import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.service.EventEnrichmentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.Optional;
 public class AdminEventServiceImpl implements AdminEventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-    private final EventEnrichmentService eventEnrichmentService;
+    private final EventMapper eventMapper;
 
 
     @Override
@@ -56,7 +56,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                 pageable
         );
 
-        return eventEnrichmentService.enrichFullList(page.getContent());
+        return eventMapper.convertToFullDtoList(page.getContent());
     }
 
     @Override
@@ -120,6 +120,6 @@ public class AdminEventServiceImpl implements AdminEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("Admin updated event with id: {}", updatedEvent.getId());
 
-        return eventEnrichmentService.enrichFull(updatedEvent);
+        return eventMapper.convertToFullDto(updatedEvent);
     }
 }

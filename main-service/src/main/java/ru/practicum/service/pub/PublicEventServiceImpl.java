@@ -12,11 +12,11 @@ import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.SortByType;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.service.EventEnrichmentService;
 import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
@@ -28,7 +28,7 @@ import java.util.List;
 public class PublicEventServiceImpl implements PublicEventService {
     private final EventRepository eventRepository;
     private final ViewsService viewsService;
-    private final EventEnrichmentService eventEnrichmentService;
+    private final EventMapper eventMapper;
 
     @Override
     public List<EventShortDto> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
@@ -52,7 +52,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return eventEnrichmentService.enrichShortList(events, rangeStart, rangeEnd);
+        return eventMapper.convertToShortDtoList(events, rangeStart, rangeEnd);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return eventEnrichmentService.enrichFull(event);
+        return eventMapper.convertToFullDto(event);
     }
 
     private Sort getSort(SortByType sortBy) {

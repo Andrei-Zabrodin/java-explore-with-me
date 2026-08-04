@@ -12,7 +12,6 @@ import ru.practicum.model.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.service.CompilationEnrichmentService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,6 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
-    private final CompilationEnrichmentService compilationEnrichmentService;
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto dto) {
@@ -44,7 +42,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation savedComp = compilationRepository.save(compilation);
         log.info("Created compilation with id: {}", savedComp.getId());
 
-        return compilationEnrichmentService.enrichCompilationWithGivenEvents(savedComp, events);
+        return compilationMapper.convertToCompilationDtoWithGivenEvents(savedComp, events);
     }
 
     @Override
@@ -68,9 +66,9 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         log.info("Updated compilation with id: {}", updatedComp.getId());
 
         if (events == null)
-            return compilationEnrichmentService.enrichCompilation(updatedComp);
+            return compilationMapper.convertoToDto(updatedComp);
         else {
-            return compilationEnrichmentService.enrichCompilationWithGivenEvents(updatedComp, events);
+            return compilationMapper.convertToCompilationDtoWithGivenEvents(updatedComp, events);
         }
     }
 

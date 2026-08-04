@@ -21,7 +21,6 @@ import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.UserRepository;
-import ru.practicum.service.EventEnrichmentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +33,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final EventEnrichmentService eventEnrichmentService;
     private final EventMapper eventMapper;
 
     @Override
@@ -45,7 +43,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> page = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        return eventEnrichmentService.enrichShortList(page.getContent());
+        return eventMapper.convertToShortDtoList(page.getContent());
     }
 
     @Override
@@ -70,7 +68,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Event savedEvent = eventRepository.save(event);
         log.info("User {} created event with id: {}", userId, savedEvent.getId());
 
-        return eventEnrichmentService.enrichFull(savedEvent);
+        return eventMapper.convertToFullDto(savedEvent);
     }
 
     @Override
@@ -87,7 +85,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         log.info("User {} requested event with id: {}", userId, eventId);
 
-        return eventEnrichmentService.enrichFull(event);
+        return eventMapper.convertToFullDto(event);
     }
 
     @Override
@@ -145,6 +143,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("User {} updated event with id: {}", userId, updatedEvent.getId());
 
-        return eventEnrichmentService.enrichFull(updatedEvent);
+        return eventMapper.convertToFullDto(updatedEvent);
     }
 }
