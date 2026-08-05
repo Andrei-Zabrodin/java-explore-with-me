@@ -1,29 +1,45 @@
 package ru.practicum.service.adm;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
+import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CompilationMapper;
+import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.service.BaseCompilationService;
+import ru.practicum.service.ViewsService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class AdminCompilationServiceImpl implements AdminCompilationService {
-    private final CompilationRepository compilationRepository;
+public class AdminCompilationServiceImpl extends BaseCompilationService implements AdminCompilationService {
     private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
+    private final EventMapper eventMapper;
+    private final ViewsService viewsService;
+
+    public AdminCompilationServiceImpl(CompilationRepository compilationRepository,
+                                       EventRepository eventRepository,
+                                       CompilationMapper compilationMapper,
+                                       EventMapper eventMapper,
+                                       ViewsService viewsService) {
+        super(compilationRepository);
+        this.eventRepository = eventRepository;
+        this.compilationMapper = compilationMapper;
+        this.eventMapper = eventMapper;
+        this.viewsService = viewsService;
+    }
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto dto) {
@@ -42,7 +58,11 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation savedComp = compilationRepository.save(compilation);
         log.info("Created compilation with id: {}", savedComp.getId());
 
-        return compilationMapper.convertToCompilationDtoWithGivenEvents(savedComp, events);
+        // Запрашиваем просмотры событий и создаём дто для событий
+        Map<String, Long> viewsMap = viewsService.getViewsForEventList(events);
+        List<EventShortDto> eventDtos = eventMapper.convertToShortDtoList(events, viewsMap);
+
+        return compilationMapper.convertToDto(savedComp, eventDtos);
     }
 
     @Override
@@ -57,6 +77,10 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
                 throw new NotFoundException("One or more events were not found");
             }
             compilation.setEvents(events);
+        } else {
+            // Получаем список id событий и ищем соответствующие события
+            List<Long> eventIds = getCompilationEventsList(compilation);
+            events = eventRepository.findAllByIdWithFetch(eventIds);
         }
 
         Optional.ofNullable(request.getTitle()).ifPresent(compilation::setTitle);
@@ -65,11 +89,11 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Compilation updatedComp = compilationRepository.save(compilation);
         log.info("Updated compilation with id: {}", updatedComp.getId());
 
-        if (events == null)
-            return compilationMapper.convertoToDto(updatedComp);
-        else {
-            return compilationMapper.convertToCompilationDtoWithGivenEvents(updatedComp, events);
-        }
+        // Запрашиваем просмотры событий и создаём дто для событий
+        Map<String, Long> viewsMap = viewsService.getViewsForEventList(events);
+        List<EventShortDto> eventDtos = eventMapper.convertToShortDtoList(events, viewsMap);
+
+        return compilationMapper.convertToDto(updatedComp, eventDtos);
     }
 
     @Override

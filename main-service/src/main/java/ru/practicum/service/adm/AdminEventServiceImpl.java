@@ -17,9 +17,11 @@ import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -29,7 +31,7 @@ public class AdminEventServiceImpl implements AdminEventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
-
+    private final ViewsService viewsService;
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
@@ -56,7 +58,10 @@ public class AdminEventServiceImpl implements AdminEventService {
                 pageable
         );
 
-        return eventMapper.convertToFullDtoList(page.getContent());
+        // Запрашиваем просмотры для событий
+        Map<String, Long> viewsMap = viewsService.getViewsForEventList(page.getContent(), rangeStart, rangeEnd);
+
+        return eventMapper.convertToFullDtoList(page.getContent(), viewsMap);
     }
 
     @Override
@@ -120,6 +125,9 @@ public class AdminEventServiceImpl implements AdminEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("Admin updated event with id: {}", updatedEvent.getId());
 
-        return eventMapper.convertToFullDto(updatedEvent);
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(updatedEvent);
+
+        return eventMapper.convertToFullDto(updatedEvent, views);
     }
 }

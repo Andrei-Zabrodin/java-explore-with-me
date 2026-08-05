@@ -21,9 +21,11 @@ import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.UserRepository;
+import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -34,6 +36,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
+    private final ViewsService viewsService;
 
     @Override
     public List<EventShortDto> getEventsByUser(Long userId, int from, int size) {
@@ -43,7 +46,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> page = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        return eventMapper.convertToShortDtoList(page.getContent());
+        // Запрашиваем просмотры для событий
+        Map<String, Long> viewsMap = viewsService.getViewsForEventList(page.getContent());
+
+        return eventMapper.convertToShortDtoList(page.getContent(), viewsMap);
     }
 
     @Override
@@ -68,7 +74,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Event savedEvent = eventRepository.save(event);
         log.info("User {} created event with id: {}", userId, savedEvent.getId());
 
-        return eventMapper.convertToFullDto(savedEvent);
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(savedEvent);
+
+        return eventMapper.convertToFullDto(savedEvent, views);
     }
 
     @Override
@@ -85,7 +94,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         log.info("User {} requested event with id: {}", userId, eventId);
 
-        return eventMapper.convertToFullDto(event);
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(event);
+
+        return eventMapper.convertToFullDto(event, views);
     }
 
     @Override
@@ -143,6 +155,9 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("User {} updated event with id: {}", userId, updatedEvent.getId());
 
-        return eventMapper.convertToFullDto(updatedEvent);
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(updatedEvent);
+
+        return eventMapper.convertToFullDto(updatedEvent, views);
     }
 }

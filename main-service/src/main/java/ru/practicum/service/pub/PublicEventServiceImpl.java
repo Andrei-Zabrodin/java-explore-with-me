@@ -21,6 +21,7 @@ import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,10 @@ public class PublicEventServiceImpl implements PublicEventService {
         // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return eventMapper.convertToShortDtoList(events, rangeStart, rangeEnd);
+        // Запрашиваем просмотры для событий
+        Map<String, Long> viewsMap = viewsService.getViewsForEventList(page.getContent(), rangeStart, rangeEnd);
+
+        return eventMapper.convertToShortDtoList(events, viewsMap);
     }
 
     @Override
@@ -67,7 +71,10 @@ public class PublicEventServiceImpl implements PublicEventService {
         // Отправляем информацию в сервис статистики
         viewsService.sendHit(request);
 
-        return eventMapper.convertToFullDto(event);
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(event);
+
+        return eventMapper.convertToFullDto(event, views);
     }
 
     private Sort getSort(SortByType sortBy) {

@@ -50,7 +50,11 @@ public class ViewsService {
         return stats.isEmpty() ? 0L : stats.getFirst().getHits();
     }
 
-    public Map<String, Long> getViewsMap(List<Event> events, LocalDateTime start, LocalDateTime end) {
+    public Long getViewsForEvent(Event event) {
+        return getViewsForEvent(event, null, null);
+    }
+
+    public Map<String, Long> getViewsForEventList(List<Event> events, LocalDateTime start, LocalDateTime end) {
         if (events == null || events.isEmpty()) {
             return Map.of();
         }
@@ -71,5 +75,9 @@ public class ViewsService {
 
         return stats.stream()
                 .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
+    }
+
+    public Map<String, Long> getViewsForEventList(List<Event> events) {
+        return getViewsForEventList(events, null, null);
     }
 }
