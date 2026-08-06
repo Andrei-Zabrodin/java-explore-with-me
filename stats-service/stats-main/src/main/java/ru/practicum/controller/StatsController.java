@@ -25,7 +25,7 @@ public class StatsController {
                                        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                        @RequestParam(required = false) List<String> uris,
                                        @RequestParam(defaultValue = "false") boolean unique) {
-        log.info("GET /hit - Запрашиваем статистику");
+        log.info("GET /stats - Запрашиваем статистику");
         return statsService.getStats(start, end, uris, unique);
     }
 

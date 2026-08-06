@@ -33,12 +33,21 @@ public class StatsClient {
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        String url = UriComponentsBuilder
+        UriComponentsBuilder builder = UriComponentsBuilder
                 .fromHttpUrl(serverUrl)
-                .path("/stats")
-                .queryParam("start", start)
-                .queryParam("end", end)
-                .queryParam("uris", uris)
+                .path("/stats");
+
+        if (start != null) {
+            builder.queryParam("start", start);
+        }
+        if (end != null) {
+            builder.queryParam("end", end);
+        }
+        if (uris != null && !uris.isEmpty()) {
+            builder.queryParam("uris", uris);
+        }
+
+        String url = builder
                 .queryParam("unique", unique)
                 .encode()
                 .build()
