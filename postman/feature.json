@@ -1,0 +1,783 @@
+{
+  "info": {
+    "_postman_id": "fe0353c8-4d90-462c-9df8-7a9aeb3d7579",
+    "name": "EWM - Locations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52881161",
+    "_collection_link": "https://go.postman.co/collection/52881161-fe0353c8-4d90-462c-9df8-7a9aeb3d7579?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "admin/locations",
+      "item": [
+        {
+          "name": "Добавление новой локации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = JSON.parse(pm.request.body.raw);\r",
+                  "const target = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"locationId\", target.id);\r",
+                  "\r",
+                  "pm.test(\"Локация должна содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('lat');\r",
+                  "pm.expect(target).to.have.property('lon');\r",
+                  "pm.expect(target).to.have.property('name');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('address');\r",
+                  "pm.expect(target).to.have.property('status');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.lat).equal(target.lat, 'Широта должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.lon).equal(target.lon, 'Долгота должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.name).equal(target.name, 'Название локации должно соответствовать отправленному в запросе');\r",
+                  "    pm.expect(source.description).equal(target.description, 'Описание локации должно соответствовать отправленному в запросе');\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"lat\":75.66,\r\n    \"lon\":73.44,\r\n    \"name\":\"Локация 0\",\r\n    \"description\":\"Описание локации 0\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/locations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение локации по id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Локация должна содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('lat');\r",
+                  "pm.expect(target).to.have.property('lon');\r",
+                  "pm.expect(target).to.have.property('name');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('address');\r",
+                  "pm.expect(target).to.have.property('status');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(target.id).equal(pm.collectionVariables.get(\"locationId\"));\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/locations/{{locationId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations",
+                "{{locationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение всех локаций",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Локации должны содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).is.an('array');\r",
+                  "pm.expect(target.length).to.be.gte(0);\r",
+                  "pm.expect(target[0]).to.have.property('id');\r",
+                  "pm.expect(target[0]).to.have.property('lat');\r",
+                  "pm.expect(target[0]).to.have.property('lon');\r",
+                  "pm.expect(target[0]).to.have.property('name');\r",
+                  "pm.expect(target[0]).to.have.property('description');\r",
+                  "pm.expect(target[0]).to.have.property('address');\r",
+                  "pm.expect(target[0]).to.have.property('status');\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/locations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Обновление локации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = JSON.parse(pm.request.body.raw);\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Локация должна содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('lat');\r",
+                  "pm.expect(target).to.have.property('lon');\r",
+                  "pm.expect(target).to.have.property('name');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('address');\r",
+                  "pm.expect(target).to.have.property('status');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.lat).equal(target.lat, 'Широта должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.lon).equal(target.lon, 'Долгота должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.name).equal(target.name, 'Название локации должно соответствовать отправленному в запросе');\r",
+                  "    pm.expect(source.description).equal(target.description, 'Описание локации должно соответствовать отправленному в запросе');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"lat\":65.66,\r\n    \"lon\":43.44,\r\n    \"name\":\"Локация 00\",\r\n    \"description\":\"Описание локации 00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/locations/{{locationId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations",
+                "{{locationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Удаление локации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 204\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/locations/{{locationId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations",
+                "{{locationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/locations",
+      "item": [
+        {
+          "name": "Добавление новой локации 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = JSON.parse(pm.request.body.raw);\r",
+                  "const target = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"locationId1\", target.id);\r",
+                  "\r",
+                  "pm.test(\"Локация должна содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('lat');\r",
+                  "pm.expect(target).to.have.property('lon');\r",
+                  "pm.expect(target).to.have.property('name');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('address');\r",
+                  "pm.expect(target).to.have.property('status');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.lat).equal(target.lat, 'Широта должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.lon).equal(target.lon, 'Долгота должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.name).equal(target.name, 'Название локации должно соответствовать отправленному в запросе');\r",
+                  "    pm.expect(source.description).equal(target.description, 'Описание локации должно соответствовать отправленному в запросе');\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"lat\":27.66,\r\n    \"lon\":27.44,\r\n    \"name\":\"Локация 1\",\r\n    \"description\":\"Описание локации 1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/locations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "locations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение оф локации по id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Локация должна содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('lat');\r",
+                  "pm.expect(target).to.have.property('lon');\r",
+                  "pm.expect(target).to.have.property('name');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('address');\r",
+                  "pm.expect(target).to.have.property('status');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(target.id).equal(pm.collectionVariables.get(\"locationId1\"));\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/locations/{{locationId1}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "locations",
+                "{{locationId1}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение всех официальных локаций",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Локации должны содержать поля: id, lat, lon, name, description, address, status\", function () {\r",
+                  "pm.expect(target).is.an('array');\r",
+                  "pm.expect(target.length).to.be.equal(1);\r",
+                  "pm.expect(target[0].id).equal(pm.collectionVariables.get(\"locationId1\"));\r",
+                  "pm.expect(target[0]).to.have.property('id');\r",
+                  "pm.expect(target[0]).to.have.property('lat');\r",
+                  "pm.expect(target[0]).to.have.property('lon');\r",
+                  "pm.expect(target[0]).to.have.property('name');\r",
+                  "pm.expect(target[0]).to.have.property('description');\r",
+                  "pm.expect(target[0]).to.have.property('address');\r",
+                  "pm.expect(target[0]).to.have.property('status');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/locations",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "locations"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/events/location",
+      "item": [
+        {
+          "name": "Создание пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const target = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"userId\", target.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\":\"user1\",\r\n    \"email\":\"user1@email.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание категории",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const target = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"catId\", target.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\":\"category1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/categories",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание события в локации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 201 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = JSON.parse(pm.request.body.raw);\r",
+                  "const target = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"eventId\", target.id);\r",
+                  "\r",
+                  "pm.test(\"Событие должно содержать поля: annotation, category, confirmedRequests, createdOn, description, eventDate, id, initiator,location, paid, participantLimit, publishedOn, requestModeration, state, title, views\", function () {\r",
+                  "pm.expect(target).to.have.property('annotation');\r",
+                  "pm.expect(target).to.have.property('category');\r",
+                  "pm.expect(target).to.have.property('confirmedRequests');\r",
+                  "pm.expect(target).to.have.property('createdOn');\r",
+                  "pm.expect(target).to.have.property('description');\r",
+                  "pm.expect(target).to.have.property('eventDate');\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('initiator');\r",
+                  "pm.expect(target).to.have.property('location');\r",
+                  "pm.expect(target).to.have.property('paid');\r",
+                  "pm.expect(target).to.have.property('participantLimit');\r",
+                  "pm.expect(target).to.have.property('publishedOn');\r",
+                  "pm.expect(target).to.have.property('requestModeration');\r",
+                  "pm.expect(target).to.have.property('state');\r",
+                  "pm.expect(target).to.have.property('title');\r",
+                  "pm.expect(target).to.have.property('views');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.annotation).equal(target.annotation, 'Аннотация события должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.description).equal(target.description, 'Описание события должно соответствовать отправленному в запросе');\r",
+                  "    pm.expect(source.eventDate).equal(target.eventDate, 'Дата события должна соответствовать отправленной в запросе');\r",
+                  "    pm.expect(source.title).equal(target.title, 'Название события должно соответствовать отправленному в запросе');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"annotation\": \"very long annotation123\",\r\n    \"category\":{{catId}},\r\n    \"description\": \"description long enough to bypass the validation\",\r\n    \"eventDate\": \"2027-08-10 02:50:59\",\r\n    \"location\": {\r\n        \"lat\": -28.0721,\r\n        \"lon\": 123.5778\r\n    },\r\n    \"participantLimit\": 0,\r\n    \"title\": \"title1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{userId}}/events/locations/{{locationId1}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "{{userId}}",
+                "events",
+                "locations",
+                "{{locationId1}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Опубликование события",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"stateAction\": \"PUBLISH_EVENT\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий в локации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"События должны содержать поля: annotation, category, confirmedRequests, eventDate, id, initiator, paid, title, views\", function () {\r",
+                  "pm.expect(target).is.an('array');\r",
+                  "pm.expect(target.length).to.be.gte(0);\r",
+                  "pm.expect(target[0]).to.have.property('annotation');\r",
+                  "pm.expect(target[0]).to.have.property('category');\r",
+                  "pm.expect(target[0]).to.have.property('confirmedRequests');\r",
+                  "pm.expect(target[0]).to.have.property('eventDate');\r",
+                  "pm.expect(target[0]).to.have.property('id');\r",
+                  "pm.expect(target[0]).to.have.property('initiator');\r",
+                  "pm.expect(target[0]).to.have.property('paid');\r",
+                  "pm.expect(target[0]).to.have.property('title');\r",
+                  "pm.expect(target[0].id).equal(pm.collectionVariables.get(\"eventId\"));\r",
+                  "pm.expect(target[0].title).equal(\"title1\");\r",
+                  "pm.expect(target[0]).to.have.property('views');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные события должны соответствовать сохранённым ранее\", function () {\r",
+                  "    pm.expect(target[0].id).equal(pm.collectionVariables.get(\"eventId\"));\r",
+                  "    pm.expect(target[0].title).equal(\"title1\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:8080/events/location/{{locationId1}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "events",
+                "location",
+                "{{locationId1}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "locationId",
+      "value": ""
+    },
+    {
+      "key": "locationId1",
+      "value": ""
+    },
+    {
+      "key": "locationId2",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "catId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    }
+  ]
+}
