@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import ru.practicum.dto.location.LocationDto;
 import ru.practicum.model.event.AdminStateAction;
-import ru.practicum.model.Location;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +26,7 @@ public class UpdateEventAdminRequest {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    private Location location;
+    private LocationDto location;
 
     private Boolean paid;
 

@@ -16,10 +16,9 @@ import ru.practicum.model.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
-import ru.practicum.repository.CategoryRepository;
-import ru.practicum.repository.CompilationRepository;
-import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.UserRepository;
+import ru.practicum.model.location.Location;
+import ru.practicum.model.location.LocationStatus;
+import ru.practicum.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +46,9 @@ class AdminCompilationServiceIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @MockBean
@@ -54,6 +56,7 @@ class AdminCompilationServiceIntegrationTest {
 
     private User user;
     private Category category;
+    private Location location;
     private Event event1;
     private Event event2;
     private Compilation existingCompilation;
@@ -72,6 +75,13 @@ class AdminCompilationServiceIntegrationTest {
         category = new Category();
         category.setName("Category 1");
         category = categoryRepository.save(category);
+
+        location = new Location();
+        location.setLat(55.75);
+        location.setLon(37.62);
+        location.setName("Location 1");
+        location.setStatus(LocationStatus.OFFICIAL);
+        location = locationRepository.save(location);
 
         event1 = createEvent("Event 1", LocalDateTime.now().plusDays(5));
         event2 = createEvent("Event 2", LocalDateTime.now().plusDays(7));
@@ -242,8 +252,7 @@ class AdminCompilationServiceIntegrationTest {
         event.setCreatedOn(LocalDateTime.now());
         event.setPublishedOn(LocalDateTime.now());
         event.setState(EventState.PUBLISHED);
-        event.setLat(55.75);
-        event.setLon(37.62);
+        event.setLocation(location);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);

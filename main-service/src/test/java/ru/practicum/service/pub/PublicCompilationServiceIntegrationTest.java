@@ -14,10 +14,9 @@ import ru.practicum.model.Compilation;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
-import ru.practicum.repository.CategoryRepository;
-import ru.practicum.repository.CompilationRepository;
-import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.UserRepository;
+import ru.practicum.model.location.Location;
+import ru.practicum.model.location.LocationStatus;
+import ru.practicum.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +46,9 @@ class PublicCompilationServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private LocationRepository locationRepository;
+
     @MockBean
     private StatsClient statsClient;
 
@@ -68,6 +70,13 @@ class PublicCompilationServiceIntegrationTest {
         category.setName("Category 1");
         category = categoryRepository.save(category);
 
+        Location location = new Location();
+        location.setLat(55.75);
+        location.setLon(37.62);
+        location.setName("Location 1");
+        location.setStatus(LocationStatus.OFFICIAL);
+        location = locationRepository.save(location);
+
         event = new Event();
         event.setTitle("Test Event");
         event.setAnnotation("Test Annotation");
@@ -79,8 +88,7 @@ class PublicCompilationServiceIntegrationTest {
         event.setCreatedOn(LocalDateTime.now());
         event.setPublishedOn(LocalDateTime.now());
         event.setState(EventState.PUBLISHED);
-        event.setLat(55.75);
-        event.setLon(37.62);
+        event.setLocation(location);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);

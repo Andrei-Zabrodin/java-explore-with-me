@@ -70,7 +70,7 @@ public class AdminCompilationServiceImpl extends BaseCompilationService implemen
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
 
-        List<Event> events = null;
+        List<Event> events;
         if (request.getEvents() != null) {
             events = eventRepository.findAllById(request.getEvents());
             if (events.size() != request.getEvents().size()) {

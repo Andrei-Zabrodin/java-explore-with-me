@@ -15,8 +15,10 @@ import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
+import ru.practicum.model.location.Location;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.service.ViewsService;
 
 import java.time.LocalDateTime;
@@ -30,12 +32,14 @@ import java.util.Optional;
 public class AdminEventServiceImpl implements AdminEventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
     private final ViewsService viewsService;
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
-                                        LocalDateTime rangeStart, LocalDateTime rangeEnd, int from, int size) {
+                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                        Double lat, Double lon, Double radius, int from, int size) {
 
         List<EventState> stateEnums = null;
         if (states != null && !states.isEmpty()) {
@@ -48,6 +52,15 @@ public class AdminEventServiceImpl implements AdminEventService {
             }
         }
 
+        if (lat != null && lon != null) {
+            validateCoordinates(lat, lon);
+            if (radius > 1000) {
+                throw new ValidationException("Radius cannot exceed 1000 km");
+            }
+        } else if (lat != null || lon != null) {
+            throw new ValidationException("Latitude and longitude must be provided together");
+        }
+
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> page = eventRepository.findEventsByAdminFilters(
                 users,
@@ -55,6 +68,9 @@ public class AdminEventServiceImpl implements AdminEventService {
                 categories,
                 rangeStart,
                 rangeEnd,
+                lat,
+                lon,
+                radius,
                 pageable
         );
 
@@ -111,12 +127,14 @@ public class AdminEventServiceImpl implements AdminEventService {
             event.setEventDate(request.getEventDate());
         }
 
+        if (request.getLocation() != null && request.getLocation().getId() != null) {
+            Location location = locationRepository.findById(request.getLocation().getId())
+                    .orElseThrow(() -> new NotFoundException("Location with id=" + request.getLocation().getId() + " was not found"));
+            event.setLocation(location);
+        }
+
         Optional.ofNullable(request.getAnnotation()).ifPresent(event::setAnnotation);
         Optional.ofNullable(request.getDescription()).ifPresent(event::setDescription);
-        Optional.ofNullable(request.getLocation()).ifPresent(location -> {
-            event.setLat(location.getLat());
-            event.setLon(location.getLon());
-        });
         Optional.ofNullable(request.getPaid()).ifPresent(event::setPaid);
         Optional.ofNullable(request.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(request.getRequestModeration()).ifPresent(event::setRequestModeration);
@@ -129,5 +147,14 @@ public class AdminEventServiceImpl implements AdminEventService {
         Long views = viewsService.getViewsForEvent(updatedEvent);
 
         return eventMapper.convertToFullDto(updatedEvent, views);
+    }
+
+    private void validateCoordinates(Double lat, Double lon) {
+        if (lat < -90 || lat > 90) {
+            throw new ValidationException("Latitude must be in range from -90° to 90°");
+        }
+        if (lon < -180 || lon > 180) {
+            throw new ValidationException("Longitude must be in range from -180° to 180°");
+        }
     }
 }

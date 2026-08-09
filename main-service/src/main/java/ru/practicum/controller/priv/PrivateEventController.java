@@ -57,6 +57,14 @@ public class PrivateEventController {
         return privateEventService.createEvent(userId, dto);
     }
 
+    @PostMapping("/locations/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EventFullDto createEventInLocation(@PathVariable Long userId, @PathVariable Long id,
+                                    @Valid @RequestBody NewEventDto dto) {
+        log.info("POST /users/{}/events/locations/{} - создание события пользователем", userId, id);
+        return privateEventService.createEventInOfficialLocation(userId, id, dto);
+    }
+
     @PatchMapping("/{eventId}")
     public EventFullDto updateEvent(
             @PathVariable Long userId,
