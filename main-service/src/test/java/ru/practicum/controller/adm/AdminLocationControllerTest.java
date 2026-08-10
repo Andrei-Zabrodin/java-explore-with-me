@@ -14,13 +14,10 @@ import ru.practicum.dto.location.UpdateLocationRequest;
 import ru.practicum.model.location.LocationStatus;
 import ru.practicum.service.adm.AdminLocationService;
 
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -66,78 +63,6 @@ class AdminLocationControllerTest {
         updateRequest.setName("Updated Location");
         updateRequest.setDescription("Updated Description");
         updateRequest.setAddress("Updated Address");
-    }
-
-    // ============ GET /admin/locations ============
-
-    @Test
-    void getLocationsShouldReturnListOfLocations() throws Exception {
-        List<LocationDto> locations = List.of(locationDto);
-        when(adminLocationService.getLocations(0, 10)).thenReturn(locations);
-
-        mockMvc.perform(get("/admin/locations")
-                        .param("from", "0")
-                        .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(locationDto.getId()))
-                .andExpect(jsonPath("$[0].name").value(locationDto.getName()))
-                .andExpect(jsonPath("$[0].lat").value(locationDto.getLat()))
-                .andExpect(jsonPath("$[0].lon").value(locationDto.getLon()));
-
-        verify(adminLocationService).getLocations(0, 10);
-    }
-
-    @Test
-    void getLocations_withDefaultParams_shouldReturnListOfLocations() throws Exception {
-        List<LocationDto> locations = List.of(locationDto);
-        when(adminLocationService.getLocations(0, 10)).thenReturn(locations);
-
-        mockMvc.perform(get("/admin/locations"))
-                .andExpect(status().isOk());
-
-        verify(adminLocationService, times(1)).getLocations(0, 10);
-    }
-
-    @Test
-    void getLocationsShouldReturnBadRequestWhenFromIsInvalid() throws Exception {
-        mockMvc.perform(get("/admin/locations")
-                        .param("from", "-1"))
-                .andExpect(status().isBadRequest());
-
-        verify(adminLocationService, never()).getLocations(anyInt(), anyInt());
-    }
-
-    @Test
-    void getLocationsShouldReturnBadRequestWhenSizeIsInvalid() throws Exception {
-        mockMvc.perform(get("/admin/locations")
-                        .param("size", "0"))
-                .andExpect(status().isBadRequest());
-
-        verify(adminLocationService, never()).getLocations(anyInt(), anyInt());
-    }
-
-    // ============ GET /admin/locations/{locId} ============
-
-    @Test
-    void getLocationByIdShouldReturnLocation() throws Exception {
-        when(adminLocationService.getLocationById(1L)).thenReturn(locationDto);
-
-        mockMvc.perform(get("/admin/locations/{locId}", 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(locationDto.getId()))
-                .andExpect(jsonPath("$.name").value(locationDto.getName()))
-                .andExpect(jsonPath("$.lat").value(locationDto.getLat()))
-                .andExpect(jsonPath("$.lon").value(locationDto.getLon()));
-
-        verify(adminLocationService, times(1)).getLocationById(1L);
-    }
-
-    @Test
-    void getLocationByIdShouldReturnBadRequestWhenIdIsInvalid() throws Exception {
-        mockMvc.perform(get("/admin/locations/{locId}", "invalid id"))
-                .andExpect(status().isBadRequest());
-
-        verify(adminLocationService, never()).getLocationById(anyLong());
     }
 
     // ============ POST /admin/locations ============

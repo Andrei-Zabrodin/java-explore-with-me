@@ -2,8 +2,6 @@ package ru.practicum.service.adm;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.location.NewLocationDto;
@@ -17,7 +15,6 @@ import ru.practicum.model.location.LocationStatus;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.LocationRepository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,24 +26,6 @@ public class AdminLocationServiceImpl implements AdminLocationService {
     private final LocationMapper locationMapper;
 
     private static final double COORDINATES_ERROR = 0.001;
-
-    @Override
-    public List<LocationDto> getLocations(int from, int size) {
-        Pageable pageable = PageRequest.of(from / size, size);
-        List<Location> locations = locationRepository.findAll(pageable).getContent();
-
-        log.debug("Найдено локаций: {}", locations.size());
-        return locations.stream()
-                .map(locationMapper::convertToDto)
-                .toList();
-    }
-
-    @Override
-    public LocationDto getLocationById(Long locId) {
-        Location location = locationRepository.findById(locId)
-                .orElseThrow(() -> new NotFoundException("Location with id=" + locId + " was not found"));
-        return locationMapper.convertToDto(location);
-    }
 
     @Override
     public LocationDto createLocation(NewLocationDto dto) {

@@ -23,7 +23,6 @@ import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -75,60 +74,6 @@ class AdminLocationServiceIntegrationTest {
         updateRequest.setName("Updated Location");
         updateRequest.setDescription("Updated Description");
         updateRequest.setAddress("Updated Address");
-    }
-
-    @Test
-    void getLocationsShouldReturnListWhenRequested() {
-        List<LocationDto> result = adminLocationService.getLocations(0, 10);
-
-        assertThat(result).isNotEmpty();
-        assertThat(result).extracting(LocationDto::getName).contains(existingLocation.getName());
-    }
-
-    @Test
-    void getLocationsShouldReturnAllLocationsWithPagination() {
-        for (int i = 0; i < 5; i++) {
-            Location location = new Location();
-            location.setLat(55.7558 + i * 0.1);
-            location.setLon(37.6173 + i * 0.1);
-            location.setName("Pagination Location " + i);
-            location.setStatus(LocationStatus.OFFICIAL);
-            locationRepository.save(location);
-        }
-
-        List<LocationDto> result = adminLocationService.getLocations(0, 3);
-
-        assertThat(result).hasSize(3);
-        assertThat(result).extracting(LocationDto::getName)
-                .containsExactlyInAnyOrder(existingLocation.getName(), "Pagination Location 0", "Pagination Location 1");
-    }
-
-    @Test
-    void getLocationsShouldReturnEmptyListWhenNoLocationsFound() {
-        List<LocationDto> result = adminLocationService.getLocations(10, 10);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void getLocationByIdShouldReturnLocationWhenExists() {
-        LocationDto result = adminLocationService.getLocationById(existingLocation.getId());
-
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(existingLocation.getId());
-        assertThat(result.getName()).isEqualTo(existingLocation.getName());
-        assertThat(result.getLat()).isEqualTo(existingLocation.getLat());
-        assertThat(result.getLon()).isEqualTo(existingLocation.getLon());
-        assertThat(result.getStatus()).isEqualTo(LocationStatus.OFFICIAL);
-    }
-
-    @Test
-    void getLocationByIdShouldThrowNotFoundExceptionWhenNotFound() {
-        Long nonExistentId = 999999L;
-
-        assertThatThrownBy(() -> adminLocationService.getLocationById(nonExistentId))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Location with id=" + nonExistentId + " was not found");
     }
 
     @Test

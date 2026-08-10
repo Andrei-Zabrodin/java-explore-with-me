@@ -24,7 +24,8 @@ public class PublicLocationServiceImpl implements PublicLocationService {
     private final LocationMapper locationMapper;
 
     @Override
-    public List<LocationDto> getOfficialLocations(String text, Double lat, Double lon, Double radius, int from, int size) {
+    public List<LocationDto> getLocations(String text, Double lat, Double lon, Double radius, String locationState,
+                                          int from, int size) {
         if (lat != null && lon != null) {
             if (radius > 1000) {
                 throw new ValidationException("Radius cannot exceed 1000 km");
@@ -33,9 +34,16 @@ public class PublicLocationServiceImpl implements PublicLocationService {
             throw new ValidationException("Latitude and longitude must be provided together");
         }
 
+        LocationStatus status;
+        try {
+            status = LocationStatus.valueOf(locationState);
+        } catch (Exception e) {
+            throw new ValidationException("Unknown state: " + e.getMessage());
+        }
+
         Pageable pageable = PageRequest.of(from / size, size);
-        List<Location> locations = locationRepository.findLocationsByPublicFilters(text, lat, lon, radius, pageable)
-                .getContent();
+        List<Location> locations = locationRepository.findLocationsByPublicFilters(text, lat, lon, radius,
+                        status, pageable).getContent();
 
         log.debug("Найдено локаций: {}", locations.size());
         return locations.stream()
@@ -44,9 +52,17 @@ public class PublicLocationServiceImpl implements PublicLocationService {
     }
 
     @Override
-    public LocationDto getOfficialLocationById(Long id) {
-        Location location = locationRepository.findLocationByIdAndStatus(id, LocationStatus.OFFICIAL)
-                .orElseThrow(() -> new NotFoundException("Official location with id=" + id + " was not found"));
+    public LocationDto getLocationById(Long id, String locationState) {
+        LocationStatus status;
+        try {
+            status = LocationStatus.valueOf(locationState);
+        } catch (Exception e) {
+            throw new ValidationException("Unknown state: " + e.getMessage());
+        }
+
+        Location location = locationRepository.findLocationByIdAndStatus(id, status)
+                .orElseThrow(() -> new NotFoundException("Location with id=" + id
+                        + " and status=" + status + " was not found"));
 
         return locationMapper.convertToDto(location);
     }

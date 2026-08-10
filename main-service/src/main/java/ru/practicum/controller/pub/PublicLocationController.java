@@ -21,23 +21,25 @@ public class PublicLocationController {
     private final PublicLocationService publicLocationService;
 
     @GetMapping
-    public List<LocationDto> getOfficialLocations(
+    public List<LocationDto> getLocations(
             @RequestParam(required = false) String text,
             @RequestParam(required = false) Double lat,
             @RequestParam(required = false) Double lon,
             @RequestParam(defaultValue = "10.0") @PositiveOrZero Double radius,
+            @RequestParam(defaultValue = "OFFICIAL") String locationState,
             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
             @RequestParam(defaultValue = "10") @Positive int size) {
 
-        log.info("GET /locations - получение локаций с параметрами: text={}, lat={}, lon={}, radius={}, from={}, size={}",
-                text, lat, lon, radius, from, size);
+        log.info("GET /locations - получение локаций с параметрами: text={}, lat={}, lon={}, radius={}," +
+                        " locationState ={}, from={}, size={}", text, lat, lon, radius, locationState, from, size);
 
-        return publicLocationService.getOfficialLocations(text, lat, lon, radius, from, size);
+        return publicLocationService.getLocations(text, lat, lon, radius, locationState, from, size);
     }
 
     @GetMapping("/{id}")
-    public LocationDto getOfficialLocationById(@PathVariable Long id) {
+    public LocationDto getLocationById(@PathVariable Long id,
+                                       @RequestParam(defaultValue = "OFFICIAL") String locationState) {
         log.info("GET /locations/{} - получение локации", id);
-        return publicLocationService.getOfficialLocationById(id);
+        return publicLocationService.getLocationById(id, locationState);
     }
 }

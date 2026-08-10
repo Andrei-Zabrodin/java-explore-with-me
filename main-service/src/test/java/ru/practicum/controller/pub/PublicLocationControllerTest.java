@@ -51,9 +51,9 @@ class PublicLocationControllerTest {
     // ============ GET /location ============
 
     @Test
-    void getOfficialLocationsShouldReturnListOfLocationsWithDefaultAndNullParams() throws Exception {
+    void getLocationsShouldReturnListOfLocationsWithDefaultAndNullParams() throws Exception {
         List<LocationDto> locations = List.of(locationDto);
-        when(publicLocationService.getOfficialLocations(null, null, null, 10.0, 0, 10))
+        when(publicLocationService.getLocations(null, null, null, 10.0, "OFFICIAL", 0, 10))
                 .thenReturn(locations);
 
         mockMvc.perform(get("/locations"))
@@ -65,13 +65,13 @@ class PublicLocationControllerTest {
                 .andExpect(jsonPath("$[0].status").value(locationDto.getStatus().toString()));
 
         verify(publicLocationService, times(1))
-                .getOfficialLocations(null, null, null, 10.0, 0, 10);
+                .getLocations(null, null, null, 10.0, "OFFICIAL", 0, 10);
     }
 
     @Test
-    void getOfficialLocationsWithAllParamsShouldReturnListOfLocations() throws Exception {
+    void getLocationsWithAllParamsShouldReturnListOfLocations() throws Exception {
         List<LocationDto> locations = List.of(locationDto);
-        when(publicLocationService.getOfficialLocations("test", 55.7558, 37.6173, 20.0, 5, 15))
+        when(publicLocationService.getLocations("test", 55.7558, 37.6173, 20.0, "OFFICIAL", 5, 15))
                 .thenReturn(locations);
 
         mockMvc.perform(get("/locations")
@@ -85,44 +85,44 @@ class PublicLocationControllerTest {
                 .andExpect(jsonPath("$[0].id").value(1L));
 
         verify(publicLocationService, times(1))
-                .getOfficialLocations("test", 55.7558, 37.6173, 20.0, 5, 15);
+                .getLocations("test", 55.7558, 37.6173, 20.0, "OFFICIAL", 5, 15);
     }
 
     @Test
-    void getOfficialLocationsWithInvalidRadiusShouldReturnBadRequest() throws Exception {
+    void getLocationsWithInvalidRadiusShouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/locations")
                         .param("radius", "-1.0"))
                 .andExpect(status().isBadRequest());
 
         verify(publicLocationService, never())
-                .getOfficialLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt());
+                .getLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt(), anyInt());
     }
 
     @Test
-    void getOfficialLocationsWithInvalidFromShouldReturnBadRequest() throws Exception {
+    void getLocationsWithInvalidFromShouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/locations")
                         .param("from", "-1"))
                 .andExpect(status().isBadRequest());
 
         verify(publicLocationService, never())
-                .getOfficialLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt());
+                .getLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt(), anyInt());
     }
 
     @Test
-    void getOfficialLocationsWithInvalidSizeShouldReturnBadRequest() throws Exception {
+    void getLocationsWithInvalidSizeShouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/locations")
                         .param("size", "0"))
                 .andExpect(status().isBadRequest());
 
         verify(publicLocationService, never())
-                .getOfficialLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt());
+                .getLocations(anyString(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt(), anyInt());
     }
 
     // ============ GET /location/{id} ============
 
     @Test
-    void getOfficialLocationByIdShouldReturnLocation() throws Exception {
-        when(publicLocationService.getOfficialLocationById(1L)).thenReturn(locationDto);
+    void getLocationByIdShouldReturnLocation() throws Exception {
+        when(publicLocationService.getLocationById(1L, "OFFICIAL")).thenReturn(locationDto);
 
         mockMvc.perform(get("/locations/{id}", 1L))
                 .andExpect(status().isOk())
@@ -132,14 +132,14 @@ class PublicLocationControllerTest {
                 .andExpect(jsonPath("$.lon").value(locationDto.getLon()))
                 .andExpect(jsonPath("$.status").value(locationDto.getStatus().toString()));
 
-        verify(publicLocationService, times(1)).getOfficialLocationById(1L);
+        verify(publicLocationService, times(1)).getLocationById(1L, "OFFICIAL");
     }
 
     @Test
-    void getOfficialLocationByIdShouldReturnBadRequestWhenIdInvalid() throws Exception {
+    void getLocationByIdShouldReturnBadRequestWhenIdInvalid() throws Exception {
         mockMvc.perform(get("/locations/{id}", "invalid"))
                 .andExpect(status().isBadRequest());
 
-        verify(publicLocationService, never()).getOfficialLocationById(anyLong());
+        verify(publicLocationService, never()).getLocationById(anyLong(), any());
     }
 }

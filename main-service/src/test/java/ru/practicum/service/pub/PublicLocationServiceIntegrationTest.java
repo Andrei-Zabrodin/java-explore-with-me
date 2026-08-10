@@ -62,8 +62,8 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationsShouldReturnAllOfficialLocations() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations(null, null, null, null, 0, 10);
+    void getLocationsShouldReturnAllOfficialLocations() {
+        List<LocationDto> result = publicLocationService.getLocations(null, null, null, null, "OFFICIAL", 0, 10);
 
         assertThat(result).isNotEmpty();
         assertThat(result).hasSizeGreaterThanOrEqualTo(2);
@@ -76,8 +76,8 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationsShouldFilterByText() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations("1", null, null, null, 0, 10);
+    void getLocationsShouldFilterByText() {
+        List<LocationDto> result = publicLocationService.getLocations("1", null, null, null, "OFFICIAL", 0, 10);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo(officialLocation1.getName());
@@ -85,16 +85,16 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationsShouldReturnEmptyListWhenTextNotFound() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations("NonExistentLocation", null, null, null, 0, 10);
+    void getLocationsShouldReturnEmptyListWhenTextNotFound() {
+        List<LocationDto> result = publicLocationService.getLocations("NonExistentLocation", null, null, null, "OFFICIAL", 0, 10);
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void getOfficialLocationsShouldFilterByCoordinatesAndRadius() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations(
-                null, officialLocation1.getLat() + 0.1, officialLocation1.getLon() + 0.1, 100.0, 0, 10);
+    void getLocationsShouldFilterByCoordinatesAndRadius() {
+        List<LocationDto> result = publicLocationService.getLocations(
+                null, officialLocation1.getLat() + 0.1, officialLocation1.getLon() + 0.1, 100.0, "OFFICIAL", 0, 10);
 
         assertThat(result).isNotEmpty();
         assertThat(result).extracting(LocationDto::getName)
@@ -102,44 +102,44 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationsShouldReturnEmptyListWhenCoordinatesOutOfRadius() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations(
-                null, officialLocation1.getLat() + 0.1, officialLocation1.getLon() + 0.1, 1.0, 0, 10);
+    void getLocationsShouldReturnEmptyListWhenCoordinatesOutOfRadius() {
+        List<LocationDto> result = publicLocationService.getLocations(
+                null, officialLocation1.getLat() + 0.1, officialLocation1.getLon() + 0.1, 1.0, "OFFICIAL", 0, 10);
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void getOfficialLocationsShouldThrowValidationExceptionWhenOnlyLatProvided() {
-        assertThatThrownBy(() -> publicLocationService.getOfficialLocations(null, 55.7558, null, null, 0, 10))
+    void getLocationsShouldThrowValidationExceptionWhenOnlyLatProvided() {
+        assertThatThrownBy(() -> publicLocationService.getLocations(null, 55.7558, null, null, "OFFICIAL", 0, 10))
                 .isInstanceOf(ValidationException.class)
                 .hasMessage("Latitude and longitude must be provided together");
     }
 
     @Test
-    void getOfficialLocationsShouldThrowValidationExceptionWhenOnlyLonProvided() {
-        assertThatThrownBy(() -> publicLocationService.getOfficialLocations(null, null, 37.6173, null, 0, 10))
+    void getLocationsShouldThrowValidationExceptionWhenOnlyLonProvided() {
+        assertThatThrownBy(() -> publicLocationService.getLocations(null, null, 37.6173, null, "OFFICIAL", 0, 10))
                 .isInstanceOf(ValidationException.class)
                 .hasMessage("Latitude and longitude must be provided together");
     }
 
     @Test
-    void getOfficialLocationsShouldThrowValidationExceptionWhenRadiusExceedsLimit() {
-        assertThatThrownBy(() -> publicLocationService.getOfficialLocations(null, 55.7558, 37.6173, 1000.1, 0, 10))
+    void getLocationsShouldThrowValidationExceptionWhenRadiusExceedsLimit() {
+        assertThatThrownBy(() -> publicLocationService.getLocations(null, 55.7558, 37.6173, 1000.1, "OFFICIAL", 0, 10))
                 .isInstanceOf(ValidationException.class)
                 .hasMessage("Radius cannot exceed 1000 km");
     }
 
     @Test
-    void getOfficialLocationsShouldWorkWithRadiusExactlyAtLimit() {
-        List<LocationDto> result = publicLocationService.getOfficialLocations(
-                null, 55.7558, 37.6173, 1000.0, 0, 10);
+    void getLocationsShouldWorkWithRadiusExactlyAtLimit() {
+        List<LocationDto> result = publicLocationService.getLocations(
+                null, 55.7558, 37.6173, 1000.0, "OFFICIAL", 0,  10);
 
         assertThat(result).isNotNull();
     }
 
     @Test
-    void getOfficialLocationsShouldSupportPagination() {
+    void getLocationsShouldSupportPagination() {
         for (int i = 0; i < 5; i++) {
             Location location = new Location();
             location.setLat(55.7558 + i * 0.1);
@@ -149,8 +149,8 @@ class PublicLocationServiceIntegrationTest {
             locationRepository.save(location);
         }
 
-        List<LocationDto> firstPage = publicLocationService.getOfficialLocations(null, null, null, null, 0, 3);
-        List<LocationDto> secondPage = publicLocationService.getOfficialLocations(null, null, null, null, 3, 3);
+        List<LocationDto> firstPage = publicLocationService.getLocations(null, null, null, null, "OFFICIAL", 0, 3);
+        List<LocationDto> secondPage = publicLocationService.getLocations(null, null, null, null, "OFFICIAL", 3, 3);
 
         assertThat(firstPage).hasSize(3);
         assertThat(secondPage).hasSize(3);
@@ -161,8 +161,24 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationByIdShouldReturnLocationWhenExists() {
-        LocationDto result = publicLocationService.getOfficialLocationById(officialLocation1.getId());
+    void getLocationsShouldThrowValidationExceptionWhenInvalidState() {
+        assertThatThrownBy(() -> publicLocationService.getLocations(null, null, null, null, "invalid", 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("Unknown state: ");
+    }
+
+    @Test
+    void getLocationsShouldReturnCustomLocationsWhenPrompted() {
+        List<LocationDto> result = publicLocationService.getLocations(null, null, null, null, "CUSTOM", 0, 10);
+
+        assertThat(result).isNotEmpty();
+        assertThat(result).extracting(LocationDto::getName)
+                .contains(customLocation.getName());
+    }
+
+    @Test
+    void getLocationByIdShouldReturnLocationWhenExists() {
+        LocationDto result = publicLocationService.getLocationById(officialLocation1.getId(), "OFFICIAL");
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(officialLocation1.getId());
@@ -171,23 +187,40 @@ class PublicLocationServiceIntegrationTest {
     }
 
     @Test
-    void getOfficialLocationByIdShouldThrowNotFoundExceptionWhenLocationNotFound() {
+    void getLocationByIdShouldReturnCustomLocationWhenExists() {
+        LocationDto result = publicLocationService.getLocationById(customLocation.getId(), "CUSTOM");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(customLocation.getId());
+        assertThat(result.getName()).isEqualTo(customLocation.getName());
+        assertThat(result.getStatus()).isEqualTo(LocationStatus.CUSTOM);
+    }
+
+    @Test
+    void getLocationByIdShouldThrowNotFoundExceptionWhenLocationNotFound() {
         Long nonExistentId = 999999L;
 
-        assertThatThrownBy(() -> publicLocationService.getOfficialLocationById(nonExistentId))
+        assertThatThrownBy(() -> publicLocationService.getLocationById(nonExistentId, "OFFICIAL"))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("Official location with id=" + nonExistentId + " was not found");
+                .hasMessage("Location with id=" + nonExistentId + " and status=OFFICIAL was not found");
     }
 
     @Test
-    void getOfficialLocationByIdShouldThrowNotFoundExceptionWhenLocationIsNotOfficial() {
-        assertThatThrownBy(() -> publicLocationService.getOfficialLocationById(customLocation.getId()))
+    void getLocationByIdShouldThrowNotFoundExceptionWhenWrongLocationState() {
+        assertThatThrownBy(() -> publicLocationService.getLocationById(customLocation.getId(), "OFFICIAL"))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("Official location with id=" + customLocation.getId() + " was not found");
+                .hasMessage("Location with id=" + customLocation.getId() + " and status=OFFICIAL was not found");
     }
 
     @Test
-    void getOfficialLocationsShouldCombineTextAndCoordinatesFilters() {
+    void getLocationByIdShouldThrowValidationExceptionWhenInvalidState() {
+        assertThatThrownBy(() -> publicLocationService.getLocationById(officialLocation1.getId(), "invalid"))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("Unknown state:");
+    }
+
+    @Test
+    void getLocationsShouldCombineTextAndCoordinatesFilters() {
         Location location = new Location();
         location.setLat(65.7558);
         location.setLon(47.6173);
@@ -195,8 +228,8 @@ class PublicLocationServiceIntegrationTest {
         location.setStatus(LocationStatus.OFFICIAL);
         locationRepository.save(location);
 
-        List<LocationDto> result = publicLocationService.getOfficialLocations(
-                "Test", 65.9, 47.6, 100.0, 0, 10);
+        List<LocationDto> result = publicLocationService.getLocations(
+                "Test", 65.9, 47.6, 100.0, "OFFICIAL",  0, 10);
 
         assertThat(result).isNotEmpty();
         assertThat(result).extracting(LocationDto::getName)

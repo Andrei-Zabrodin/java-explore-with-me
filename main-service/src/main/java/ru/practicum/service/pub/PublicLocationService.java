@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface PublicLocationService {
 
-    List<LocationDto> getOfficialLocations(String text, Double lat, Double lon, Double radius, int from, int size);
+    List<LocationDto> getLocations(String text, Double lat, Double lon, Double radius, String locationState,
+                                   int from, int size);
 
-    LocationDto getOfficialLocationById(Long id);
+    LocationDto getLocationById(Long id, String locationState);
 }
