@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
 import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.location.LocationDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
@@ -16,10 +17,12 @@ import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
-import ru.practicum.model.Location;
+import ru.practicum.model.location.Location;
 import ru.practicum.model.event.AdminStateAction;
+import ru.practicum.model.location.LocationStatus;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -46,6 +49,9 @@ class AdminEventServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private LocationRepository locationRepository;
+
     @MockBean
     private StatsClient statsClient;
 
@@ -54,6 +60,8 @@ class AdminEventServiceIntegrationTest {
     private Event event;
     private UpdateEventAdminRequest updateRequest;
     private Location location;
+    private Location newLocation;
+    private LocationDto locationDto;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +80,19 @@ class AdminEventServiceIntegrationTest {
         location = new Location();
         location.setLat(55.75);
         location.setLon(37.62);
+        location.setName("Location 1");
+        location.setStatus(LocationStatus.OFFICIAL);
+        location = locationRepository.save(location);
+
+        newLocation = new Location();
+        newLocation.setLat(65.75);
+        newLocation.setLon(47.62);
+        newLocation.setName("New Location");
+        newLocation.setStatus(LocationStatus.OFFICIAL);
+        newLocation = locationRepository.save(location);
+
+        locationDto = new LocationDto();
+        locationDto.setId(newLocation.getId());
 
         event = new Event();
         event.setTitle("Test Event");
@@ -84,8 +105,7 @@ class AdminEventServiceIntegrationTest {
         event.setCreatedOn(LocalDateTime.now());
         event.setPublishedOn(LocalDateTime.now());
         event.setState(EventState.PENDING);
-        event.setLat(55.754167);
-        event.setLon(37.62);
+        event.setLocation(location);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);
@@ -97,7 +117,7 @@ class AdminEventServiceIntegrationTest {
         updateRequest.setDescription("Updated Description");
         updateRequest.setCategory(category.getId());
         updateRequest.setEventDate(LocalDateTime.now().plusDays(7));
-        updateRequest.setLocation(location);
+        updateRequest.setLocation(locationDto);
         updateRequest.setPaid(true);
         updateRequest.setParticipantLimit(20);
         updateRequest.setRequestModeration(false);
@@ -112,6 +132,9 @@ class AdminEventServiceIntegrationTest {
                 List.of(category.getId()),
                 null,
                 null,
+                null,
+                null,
+                10.0,
                 0,
                 10
         );
@@ -130,6 +153,9 @@ class AdminEventServiceIntegrationTest {
                 List.of(999L),
                 null,
                 null,
+                null,
+                null,
+                10.0,
                 0,
                 10
         );
@@ -150,8 +176,7 @@ class AdminEventServiceIntegrationTest {
             extraEvent.setEventDate(LocalDateTime.now().plusDays(i + 10));
             extraEvent.setCreatedOn(LocalDateTime.now());
             extraEvent.setState(EventState.PENDING);
-            extraEvent.setLat(55.75);
-            extraEvent.setLon(37.62);
+            extraEvent.setLocation(location);
             extraEvent.setPaid(false);
             extraEvent.setParticipantLimit(10);
             extraEvent.setRequestModeration(true);
@@ -159,7 +184,7 @@ class AdminEventServiceIntegrationTest {
         }
 
         List<EventFullDto> firstPage = adminEventService.getEvents(
-                null, null, null, null, null, 0, 3
+                null, null, null, null, null, null, null, 10.0, 0, 3
         );
 
         assertThat(firstPage).hasSize(3);
@@ -167,7 +192,7 @@ class AdminEventServiceIntegrationTest {
                 .containsExactly(event.getTitle(), "Extra Event 0", "Extra Event 1");
 
         List<EventFullDto> secondPage = adminEventService.getEvents(
-                null, null, null, null, null, 3, 3
+                null, null, null, null, null, null, null, 10.0, 3, 3
         );
 
         assertThat(secondPage).hasSize(3);
@@ -175,7 +200,7 @@ class AdminEventServiceIntegrationTest {
                 .containsExactly("Extra Event 2", "Extra Event 3", "Extra Event 4");
 
         List<EventFullDto> thirdPage = adminEventService.getEvents(
-                null, null, null, null, null, 6, 3
+                null, null, null, null, null, null, null, 10.0, 6, 3
         );
 
         assertThat(thirdPage).isEmpty();
@@ -189,10 +214,69 @@ class AdminEventServiceIntegrationTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                10.0,
                 0,
                 10
         )).isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Unknown state");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenOnlyLatProvided() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, 55.75, null, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Latitude and longitude must be provided together");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenOnlyLonProvided() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, null, 37.61, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Latitude and longitude must be provided together");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenLatBelowMin() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, -90.1, 37.61, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Latitude must be in range from -90° to 90°");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenLatAboveMax() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, 90.1, 37.61, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Latitude must be in range from -90° to 90°");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenLonBelowMin() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, 55.75, -180.1, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Longitude must be in range from -180° to 180°");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenLonAboveMax() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, 55.75, 180.1, 100.0, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Longitude must be in range from -180° to 180°");
+    }
+
+    @Test
+    void getEventsShouldThrowValidationExceptionWhenRadiusExceedsLimit() {
+        assertThatThrownBy(() -> adminEventService.getEvents(null, null, null, null,
+                null, 55.75, 37.61, 1000.1, 0, 10))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Radius cannot exceed 1000 km");
     }
 
     @Test
@@ -207,6 +291,8 @@ class AdminEventServiceIntegrationTest {
         assertThat(result.getPaid()).isEqualTo(updateRequest.getPaid());
         assertThat(result.getParticipantLimit()).isEqualTo(updateRequest.getParticipantLimit());
         assertThat(result.getRequestModeration()).isEqualTo(updateRequest.getRequestModeration());
+        assertThat(result.getLocation().getLat()).isEqualTo(newLocation.getLat());
+        assertThat(result.getLocation().getLon()).isEqualTo(newLocation.getLon());
 
         Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
         assertThat(updatedEvent.getTitle()).isEqualTo(updateRequest.getTitle());
@@ -311,5 +397,38 @@ class AdminEventServiceIntegrationTest {
         assertThatThrownBy(() -> adminEventService.updateEvent(event.getId(), updateRequest))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("Event date must be at least one hour after the publication date");
+    }
+
+    @Test
+    void updateEventShouldThrowNotFoundExceptionWhenLocationIdNotExists() {
+        locationDto.setId(999999L);
+        updateRequest.setLocation(locationDto);
+
+        assertThatThrownBy(() -> adminEventService.updateEvent(event.getId(), updateRequest))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Location with id=" + locationDto.getId() + " was not found");
+    }
+
+    @Test
+    void updateEventShouldNotChangeLocationWhenLocationIsNull() {
+        updateRequest.setLocation(null);
+
+        EventFullDto result = adminEventService.updateEvent(event.getId(), updateRequest);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getLocation().getId()).isEqualTo(event.getLocation().getId());
+        assertThat(result.getLocation().getName()).isEqualTo(event.getLocation().getName());
+    }
+
+    @Test
+    void updateEventShouldNotChangeLocationWhenLocationIdIsNull() {
+        locationDto.setId(null);
+        updateRequest.setLocation(locationDto);
+
+        EventFullDto result = adminEventService.updateEvent(event.getId(), updateRequest);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getLocation().getId()).isEqualTo(event.getLocation().getId());
+        assertThat(result.getLocation().getName()).isEqualTo(event.getLocation().getName());
     }
 }

@@ -3,6 +3,7 @@ package ru.practicum.model.event;
 import jakarta.persistence.*;
 import lombok.Data;
 import ru.practicum.model.Category;
+import ru.practicum.model.location.Location;
 import ru.practicum.model.User;
 
 import java.time.LocalDateTime;
@@ -38,11 +39,9 @@ public class Event {
     @JoinColumn(name = "initiator_id")
     private User initiator;
 
-    @Column
-    private Double lat;
-
-    @Column
-    private Double lon;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
 
     @Column
     private Boolean paid;

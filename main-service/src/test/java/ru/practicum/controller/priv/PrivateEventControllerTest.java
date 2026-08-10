@@ -12,11 +12,12 @@ import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.location.LocationDto;
+import ru.practicum.dto.location.NewCoordinatesDto;
 import ru.practicum.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.request.EventRequestStatusUpdateResult;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.model.event.EventState;
-import ru.practicum.model.Location;
 import ru.practicum.model.request.RequestState;
 import ru.practicum.model.event.UserStateAction;
 import ru.practicum.service.priv.PrivateEventService;
@@ -55,7 +56,8 @@ class PrivateEventControllerTest {
     private EventFullDto eventFullDto;
     private ParticipationRequestDto participationRequestDto;
     private EventRequestStatusUpdateResult statusUpdateResult;
-    private Location location;
+    private LocationDto locationDto;
+    private NewCoordinatesDto coordinatesDto;
     private LocalDateTime now;
 
     @BeforeEach
@@ -65,9 +67,13 @@ class PrivateEventControllerTest {
         requestId = 1L;
         now = LocalDateTime.now();
 
-        location = new Location();
-        location.setLat(55.754167);
-        location.setLon(37.62);
+        locationDto = new LocationDto();
+        locationDto.setLat(55.75);
+        locationDto.setLon(37.62);
+
+        coordinatesDto = new NewCoordinatesDto();
+        coordinatesDto.setLat(55.75);
+        coordinatesDto.setLon(37.62);
 
         newEventDto = new NewEventDto();
         newEventDto.setTitle("Тестовое событие");
@@ -75,7 +81,7 @@ class PrivateEventControllerTest {
         newEventDto.setDescription("Тестовое описание события для проверки");
         newEventDto.setCategory(1L);
         newEventDto.setEventDate(now.plusDays(5));
-        newEventDto.setLocation(location);
+        newEventDto.setLocation(coordinatesDto);
         newEventDto.setPaid(false);
         newEventDto.setParticipantLimit(10);
         newEventDto.setRequestModeration(true);
@@ -86,7 +92,7 @@ class PrivateEventControllerTest {
         updateEventUserRequest.setDescription("Обновлённое описание");
         updateEventUserRequest.setCategory(1L);
         updateEventUserRequest.setEventDate(now.plusDays(7));
-        updateEventUserRequest.setLocation(location);
+        updateEventUserRequest.setLocation(locationDto);
         updateEventUserRequest.setPaid(true);
         updateEventUserRequest.setParticipantLimit(20);
         updateEventUserRequest.setRequestModeration(false);

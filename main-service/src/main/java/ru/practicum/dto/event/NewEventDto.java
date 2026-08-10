@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.model.Location;
+import ru.practicum.dto.location.NewCoordinatesDto;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +29,7 @@ public class NewEventDto {
     private LocalDateTime eventDate;
 
     @NotNull(message = "Location must not be null")
-    private Location location;
+    private NewCoordinatesDto location;
 
     private Boolean paid = false;
 

@@ -13,8 +13,7 @@ import java.util.Map;
 @Mapper(componentModel = "spring")
 public abstract class EventMapper {
 
-    @Mapping(target = "lat", source = "location.lat")
-    @Mapping(target = "lon", source = "location.lon")
+    @Mapping(target = "location", ignore = true)
     @Mapping(target = "category", ignore = true)
     public abstract Event convertToEntity(NewEventDto dto);
 
@@ -68,8 +67,6 @@ public abstract class EventMapper {
                 .toList();
     }
 
-    @Mapping(target = "location.lat", source = "lat")
-    @Mapping(target = "location.lon", source = "lon")
     protected abstract EventFullDto prepareForFullDto(Event entity);
 
     protected abstract EventShortDto prepareForShortDto(Event entity);

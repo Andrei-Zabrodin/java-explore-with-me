@@ -11,16 +11,20 @@ import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.location.LocationDto;
+import ru.practicum.dto.location.NewCoordinatesDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
-import ru.practicum.model.Location;
+import ru.practicum.model.location.Location;
 import ru.practicum.model.event.UserStateAction;
+import ru.practicum.model.location.LocationStatus;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -45,6 +49,9 @@ class PrivateEventServiceIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @MockBean
@@ -57,6 +64,7 @@ class PrivateEventServiceIntegrationTest {
     private NewEventDto newEventDto;
     private UpdateEventUserRequest updateRequest;
     private Location location;
+    private Location offLocation;
 
     @BeforeEach
     void setUp() {
@@ -78,8 +86,26 @@ class PrivateEventServiceIntegrationTest {
         category = categoryRepository.save(category);
 
         location = new Location();
-        location.setLat(55.75);
-        location.setLon(37.62);
+        location.setLat(57.75);
+        location.setLon(39.62);
+        location.setName("Location 1");
+        location.setStatus(LocationStatus.CUSTOM);
+        location = locationRepository.save(location);
+
+        offLocation = new Location();
+        offLocation.setLat(67.75);
+        offLocation.setLon(49.62);
+        offLocation.setName("Official Location");
+        offLocation.setStatus(LocationStatus.OFFICIAL);
+        offLocation = locationRepository.save(offLocation);
+
+        NewCoordinatesDto coordinatesDto = new NewCoordinatesDto();
+        coordinatesDto.setLat(55.75);
+        coordinatesDto.setLon(37.62);
+
+        LocationDto locationDto = new LocationDto();
+        locationDto.setLat(55.75);
+        locationDto.setLon(37.62);
 
         event = new Event();
         event.setTitle("Test Event");
@@ -91,8 +117,7 @@ class PrivateEventServiceIntegrationTest {
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());
         event.setState(EventState.PENDING);
-        event.setLat(55.75);
-        event.setLon(37.62);
+        event.setLocation(location);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);
@@ -104,7 +129,7 @@ class PrivateEventServiceIntegrationTest {
         newEventDto.setDescription("New Description");
         newEventDto.setCategory(category.getId());
         newEventDto.setEventDate(LocalDateTime.now().plusDays(5));
-        newEventDto.setLocation(location);
+        newEventDto.setLocation(coordinatesDto);
         newEventDto.setPaid(false);
         newEventDto.setParticipantLimit(10);
         newEventDto.setRequestModeration(true);
@@ -115,7 +140,7 @@ class PrivateEventServiceIntegrationTest {
         updateRequest.setDescription("Updated Description");
         updateRequest.setCategory(category.getId());
         updateRequest.setEventDate(LocalDateTime.now().plusDays(7));
-        updateRequest.setLocation(location);
+        updateRequest.setLocation(locationDto);
         updateRequest.setPaid(true);
         updateRequest.setParticipantLimit(20);
         updateRequest.setRequestModeration(false);
@@ -160,8 +185,7 @@ class PrivateEventServiceIntegrationTest {
             extraEvent.setEventDate(LocalDateTime.now().plusDays(i + 10));
             extraEvent.setCreatedOn(LocalDateTime.now());
             extraEvent.setState(EventState.PENDING);
-            extraEvent.setLat(55.75);
-            extraEvent.setLon(37.62);
+            extraEvent.setLocation(location);
             extraEvent.setPaid(false);
             extraEvent.setParticipantLimit(10);
             extraEvent.setRequestModeration(true);
@@ -227,6 +251,65 @@ class PrivateEventServiceIntegrationTest {
         assertThatThrownBy(() -> privateEventService.createEvent(user.getId(), newEventDto))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Category with id=" + nonExistentId + " was not found");
+    }
+
+    @Test
+    void createEventInOfficialLocationShouldThrowNotFoundExceptionWhenUserNotFound() {
+        Long nonExistentId = 999999L;
+
+        assertThatThrownBy(() -> privateEventService.createEventInOfficialLocation(
+                nonExistentId, offLocation.getId(), newEventDto))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("User with id=" + nonExistentId + " was not found");
+    }
+
+    @Test
+    void createEventInOfficialLocationShouldThrowNotFoundExceptionWhenLocationNotFound() {
+        Long nonExistentId = 999999L;
+
+        assertThatThrownBy(() -> privateEventService.createEventInOfficialLocation(
+                user.getId(), nonExistentId, newEventDto))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Official location with id=" + nonExistentId + " was not found");
+    }
+
+    @Test
+    void createEventInOfficialLocationShouldThrowNotFoundExceptionWhenCategoryNotFound() {
+        Long nonExistentId = 999999L;
+        newEventDto.setCategory(nonExistentId);
+
+        assertThatThrownBy(() -> privateEventService.createEventInOfficialLocation(
+                user.getId(), offLocation.getId(), newEventDto))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Category with id=" + nonExistentId + " was not found");
+    }
+
+    @Test
+    void createEventInOfficialLocationShouldThrowConflictExceptionWhenEventDateTooSoon() {
+        newEventDto.setEventDate(LocalDateTime.now().plusHours(1));
+
+        assertThatThrownBy(() -> privateEventService.createEventInOfficialLocation(
+                user.getId(), offLocation.getId(), newEventDto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Event date must be at least 2 hours from now");
+    }
+
+    @Test
+    void createEventInOfficialLocationShouldCreateWhenValidRequest() {
+        EventFullDto result = privateEventService.createEventInOfficialLocation(
+                user.getId(), offLocation.getId(), newEventDto);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getTitle()).isEqualTo(newEventDto.getTitle());
+        assertThat(result.getAnnotation()).isEqualTo(newEventDto.getAnnotation());
+        assertThat(result.getDescription()).isEqualTo(newEventDto.getDescription());
+        assertThat(result.getState()).isEqualTo(EventState.PENDING);
+        assertThat(result.getLocation().getId()).isEqualTo(offLocation.getId());
+
+        Event savedEvent = eventRepository.findById(result.getId()).orElseThrow();
+        assertThat(savedEvent.getTitle()).isEqualTo(newEventDto.getTitle());
+        assertThat(savedEvent.getState()).isEqualTo(EventState.PENDING);
     }
 
     @Test

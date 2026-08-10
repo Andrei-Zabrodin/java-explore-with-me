@@ -6,20 +6,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
+import ru.practicum.dto.location.LocationDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
+import ru.practicum.model.location.Location;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
+import ru.practicum.model.location.LocationStatus;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.service.ViewsService;
 
@@ -35,6 +40,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
     private final ViewsService viewsService;
 
@@ -53,6 +59,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
@@ -64,8 +71,11 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Category category = categoryRepository.findById(dto.getCategory())
                 .orElseThrow(() -> new NotFoundException("Category with id=" + dto.getCategory() + " was not found"));
 
+        Location location = createCustomLocation(dto.getLocation().getLat(), dto.getLocation().getLon());
+
         Event event = eventMapper.convertToEntity(dto);
         event.setInitiator(user);
+        event.setLocation(location);
         event.setCategory(category);
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
@@ -73,6 +83,38 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         Event savedEvent = eventRepository.save(event);
         log.info("User {} created event with id: {}", userId, savedEvent.getId());
+
+        // Запрашиваем просмотры для события
+        Long views = viewsService.getViewsForEvent(savedEvent);
+
+        return eventMapper.convertToFullDto(savedEvent, views);
+    }
+
+    @Override
+    public EventFullDto createEventInOfficialLocation(Long userId, Long locId, NewEventDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
+
+        if (dto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException("Event date must be at least 2 hours from now");
+        }
+
+        Category category = categoryRepository.findById(dto.getCategory())
+                .orElseThrow(() -> new NotFoundException("Category with id=" + dto.getCategory() + " was not found"));
+
+        Location location = locationRepository.findLocationByIdAndStatus(locId, LocationStatus.OFFICIAL)
+                .orElseThrow(() -> new NotFoundException("Official location with id=" + locId + " was not found"));
+
+        Event event = eventMapper.convertToEntity(dto);
+        event.setInitiator(user);
+        event.setLocation(location);
+        event.setCategory(category);
+        event.setState(EventState.PENDING);
+        event.setCreatedOn(LocalDateTime.now());
+        event.setConfirmedRequests(0L);
+
+        Event savedEvent = eventRepository.save(event);
+        log.info("User {} created event with id {} in location with id {}", userId, savedEvent.getId(), locId);
 
         // Запрашиваем просмотры для события
         Long views = viewsService.getViewsForEvent(savedEvent);
@@ -101,6 +143,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest request) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
@@ -141,12 +184,25 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             event.setEventDate(request.getEventDate());
         }
 
+        if (request.getLocation() != null) {
+            LocationDto locDto = request.getLocation();
+            Location location;
+
+            if (locDto.getId() != null) {
+                location = locationRepository.findById(locDto.getId())
+                        .orElseThrow(() -> new NotFoundException("Location with id=" + locDto.getId() + " was not found"));
+            } else if (event.getLocation().getStatus().equals(LocationStatus.CUSTOM)) {
+                log.debug("Updating custom location with id {}", event.getLocation().getId());
+                location = updateCustomLocation(locDto, event.getLocation().getId());
+            } else {
+                throw new ConflictException("Cannot change properties of official location");
+            }
+
+            event.setLocation(location);
+        }
+
         Optional.ofNullable(request.getAnnotation()).ifPresent(event::setAnnotation);
         Optional.ofNullable(request.getDescription()).ifPresent(event::setDescription);
-        Optional.ofNullable(request.getLocation()).ifPresent(location -> {
-            event.setLat(location.getLat());
-            event.setLon(location.getLon());
-        });
         Optional.ofNullable(request.getPaid()).ifPresent(event::setPaid);
         Optional.ofNullable(request.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(request.getRequestModeration()).ifPresent(event::setRequestModeration);
@@ -159,5 +215,37 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Long views = viewsService.getViewsForEvent(updatedEvent);
 
         return eventMapper.convertToFullDto(updatedEvent, views);
+    }
+
+    private Location createCustomLocation(Double lat, Double lon) {
+        String customLocationName = "Location " + String.format("%.4f", lat) + ", " + String.format("%.4f", lon);
+
+        Location location = new Location();
+        location.setName(customLocationName);
+        location.setLat(lat);
+        location.setLon(lon);
+        location.setStatus(LocationStatus.CUSTOM);
+
+        Location savedLocation = locationRepository.save(location);
+        log.info("Created new custom location with id: {}", savedLocation.getId());
+
+        return savedLocation;
+    }
+
+    private Location updateCustomLocation(LocationDto locDto, Long locId) {
+        Location location = locationRepository.findById(locId)
+                .orElseThrow(() -> new NotFoundException("Location with id=" + locId + " was not found"));
+
+        Optional.ofNullable(locDto.getLat()).ifPresent(location::setLat);
+        Optional.ofNullable(locDto.getLon()).ifPresent(location::setLon);
+
+        String updatedName = "Location " + String.format("%.4f", location.getLat()) + ", "
+                + String.format("%.4f", location.getLon());
+        location.setName(updatedName);
+
+        Location updatedLocation = locationRepository.save(location);
+        log.info("Updated custom location with id: {}", updatedLocation.getId());
+
+        return updatedLocation;
     }
 }

@@ -13,8 +13,11 @@ import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
+import ru.practicum.model.location.Location;
+import ru.practicum.model.location.LocationStatus;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -33,6 +36,9 @@ class AdminCategoryServiceIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private EventRepository eventRepository;
 
     @Autowired
@@ -40,6 +46,7 @@ class AdminCategoryServiceIntegrationTest {
 
     private NewCategoryDto newCategoryDto;
     private Category existingCategory;
+    private Location existingLocation;
     private User user;
 
     @BeforeEach
@@ -50,6 +57,13 @@ class AdminCategoryServiceIntegrationTest {
         existingCategory = new Category();
         existingCategory.setName("Существующая категория");
         existingCategory = categoryRepository.save(existingCategory);
+
+        existingLocation = new Location();
+        existingLocation.setLat(55.75);
+        existingLocation.setLon(30.74);
+        existingLocation.setName("Location 1");
+        existingLocation.setStatus(LocationStatus.OFFICIAL);
+        existingLocation = locationRepository.save(existingLocation);
 
         user = new User();
         user.setName("Test User");
@@ -160,8 +174,7 @@ class AdminCategoryServiceIntegrationTest {
         event.setEventDate(LocalDateTime.now().plusDays(5));
         event.setCreatedOn(LocalDateTime.now());
         event.setState(EventState.PENDING);
-        event.setLat(55.754167);
-        event.setLon(37.62);
+        event.setLocation(existingLocation);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);

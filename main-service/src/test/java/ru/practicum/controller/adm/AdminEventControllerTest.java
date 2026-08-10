@@ -10,8 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.UpdateEventAdminRequest;
+import ru.practicum.dto.location.LocationDto;
 import ru.practicum.model.event.EventState;
-import ru.practicum.model.Location;
 import ru.practicum.service.adm.AdminEventService;
 
 import java.time.LocalDateTime;
@@ -38,14 +38,14 @@ class AdminEventControllerTest {
     private EventFullDto eventFullDto;
     private Long eventId;
     private LocalDateTime now;
-    private Location location;
+    private LocationDto location;
 
     @BeforeEach
     void setUp() {
         eventId = 1L;
         now = LocalDateTime.now();
 
-        location = new Location();
+        location = new LocationDto();
         location.setLat(55.75);
         location.setLon(37.62);
 
@@ -74,7 +74,8 @@ class AdminEventControllerTest {
     void getEventsShouldReturnListWhenValidRequest() throws Exception {
         List<EventFullDto> events = List.of(eventFullDto);
 
-        when(adminEventService.getEvents(anyList(), anyList(), anyList(), any(), any(), anyInt(), anyInt()))
+        when(adminEventService.getEvents(anyList(), anyList(), anyList(), any(), any(), anyDouble(), anyDouble(),
+                anyDouble(), anyInt(), anyInt()))
                 .thenReturn(events);
 
         mockMvc.perform(get("/admin/events")
@@ -83,6 +84,9 @@ class AdminEventControllerTest {
                         .param("categories", "1", "2")
                         .param("rangeStart", "2026-07-01 00:00:00")
                         .param("rangeEnd", "2026-07-31 23:59:59")
+                        .param("lat", "55.00")
+                        .param("lon", "37.00")
+                        .param("radius", "100")
                         .param("from", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -91,7 +95,8 @@ class AdminEventControllerTest {
                 .andExpect(jsonPath("$[0].title").value(eventFullDto.getTitle()));
 
         verify(adminEventService, times(1))
-                .getEvents(anyList(), anyList(), anyList(), any(), any(), anyInt(), anyInt());
+                .getEvents(anyList(), anyList(), anyList(), any(), any(), anyDouble(), anyDouble(),
+                        anyDouble(), anyInt(), anyInt());
     }
 
     @Test
@@ -101,7 +106,8 @@ class AdminEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(adminEventService, never())
-                .getEvents(anyList(), anyList(), anyList(), any(), any(), anyInt(), anyInt());
+                .getEvents(anyList(), anyList(), anyList(), any(), any(), anyDouble(), anyDouble(),
+                        anyDouble(), anyInt(), anyInt());
     }
 
     // ============ PATCH /admin/events/{eventId} ============

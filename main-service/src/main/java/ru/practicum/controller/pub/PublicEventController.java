@@ -33,14 +33,40 @@ public class PublicEventController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) SortByType sortBy,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lon,
+            @RequestParam(defaultValue = "10.0") @PositiveOrZero Double radius,
             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
             @RequestParam(defaultValue = "10") @Positive int size,
             HttpServletRequest request) {
 
-        log.info("GET /events - поиск событий с параметрами text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}",
-                text, categories, paid, rangeStart, rangeEnd);
-        return publicEventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sortBy,
-                from, size, request);
+        log.info("GET /events - поиск событий с параметрами: text={}, categories={}, paid={}, " +
+                        "rangeStart={}, rangeEnd={}, onlyAvailable={}, sortBy={}, lat={}, lon={}, radius={}",
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sortBy, lat, lon, radius);
+        return publicEventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sortBy, lat,
+                lon, radius, from, size, request);
+    }
+
+    @GetMapping("/location/{id}")
+    public List<EventShortDto> getEventsByLocationId(
+            @PathVariable Long id,
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) Boolean paid,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(required = false) SortByType sortBy,
+            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+            @RequestParam(defaultValue = "10") @Positive int size,
+            HttpServletRequest request) {
+
+        log.info("GET /events/location/{} - поиск событий в локации с параметрами: text={}, categories={}, paid={}, " +
+                        "rangeStart={}, rangeEnd={}, onlyAvailable={}, sortBy={}",
+                id, text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sortBy);
+
+        return publicEventService.getEventsByLocationId(id, text, categories, paid,
+                rangeStart, rangeEnd, onlyAvailable, sortBy, from, size, request);
     }
 
     @GetMapping("/{id}")

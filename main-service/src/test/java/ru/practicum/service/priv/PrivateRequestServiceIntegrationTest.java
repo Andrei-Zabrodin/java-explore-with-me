@@ -16,12 +16,11 @@ import ru.practicum.model.Category;
 import ru.practicum.model.event.Event;
 import ru.practicum.model.event.EventState;
 import ru.practicum.model.User;
+import ru.practicum.model.location.Location;
+import ru.practicum.model.location.LocationStatus;
 import ru.practicum.model.request.ParticipationRequest;
 import ru.practicum.model.request.RequestState;
-import ru.practicum.repository.CategoryRepository;
-import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.RequestRepository;
-import ru.practicum.repository.UserRepository;
+import ru.practicum.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,6 +49,9 @@ class PrivateRequestServiceIntegrationTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private LocationRepository locationRepository;
+
     @MockBean
     private StatsClient statsClient;
 
@@ -57,6 +59,7 @@ class PrivateRequestServiceIntegrationTest {
     private User anotherUser;
     private User newUser;
     private Category category;
+    private Location location;
     private Event event;
     private Event newEvent;
     private ParticipationRequest request;
@@ -86,6 +89,13 @@ class PrivateRequestServiceIntegrationTest {
         category.setName("Category 1");
         category = categoryRepository.save(category);
 
+        location = new Location();
+        location.setLat(55.75);
+        location.setLon(37.62);
+        location.setName("Location 1");
+        location.setStatus(LocationStatus.OFFICIAL);
+        location = locationRepository.save(location);
+
         event = new Event();
         event.setTitle("Test Event");
         event.setAnnotation("Test Annotation");
@@ -97,8 +107,7 @@ class PrivateRequestServiceIntegrationTest {
         event.setCreatedOn(LocalDateTime.now());
         event.setPublishedOn(LocalDateTime.now());
         event.setState(EventState.PUBLISHED);
-        event.setLat(55.75);
-        event.setLon(37.62);
+        event.setLocation(location);
         event.setPaid(false);
         event.setParticipantLimit(10);
         event.setRequestModeration(true);
@@ -116,8 +125,7 @@ class PrivateRequestServiceIntegrationTest {
         newEvent.setCreatedOn(LocalDateTime.now());
         newEvent.setPublishedOn(LocalDateTime.now());
         newEvent.setState(EventState.PUBLISHED);
-        newEvent.setLat(55.75);
-        newEvent.setLon(37.62);
+        newEvent.setLocation(location);
         newEvent.setPaid(false);
         newEvent.setParticipantLimit(10);
         newEvent.setRequestModeration(true);

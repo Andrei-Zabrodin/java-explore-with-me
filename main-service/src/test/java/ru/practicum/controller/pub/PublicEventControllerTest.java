@@ -73,8 +73,8 @@ class PublicEventControllerTest {
         List<EventShortDto> events = List.of(eventShortDto);
 
         when(publicEventService.getEvents(
-                anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class)))
+                anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class)))
                 .thenReturn(events);
 
         mockMvc.perform(get("/events")
@@ -85,6 +85,9 @@ class PublicEventControllerTest {
                         .param("rangeEnd", "2026-07-31 23:59:59")
                         .param("onlyAvailable", "true")
                         .param("sortBy", "EVENT_DATE")
+                        .param("lat", "55.00")
+                        .param("lon", "37.00")
+                        .param("radius", "100")
                         .param("from", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -93,25 +96,24 @@ class PublicEventControllerTest {
                 .andExpect(jsonPath("$[0].title").value(eventShortDto.getTitle()));
 
         verify(publicEventService, times(1))
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
     void getEventsShouldReturnListWithDefaultParameters() throws Exception {
         List<EventShortDto> events = List.of(eventShortDto);
 
-        when(publicEventService.getEvents(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false),
-                isNull(), eq(0), eq(10), any(HttpServletRequest.class)))
+        when(publicEventService.getEvents(isNull(), isNull(), isNull(), isNull(), isNull(), eq(false),
+                isNull(), isNull(), isNull(), eq(10.0), eq(0), eq(10), any(HttpServletRequest.class)))
                 .thenReturn(events);
 
         mockMvc.perform(get("/events"))
                 .andExpect(status().isOk());
 
         verify(publicEventService, times(1))
-                .getEvents(isNull(), isNull(), isNull(), isNull(), isNull(), eq(false),
-                        isNull(), eq(0), eq(10), any(HttpServletRequest.class));
+                .getEvents(isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), isNull(),
+                        isNull(), isNull(), eq(10.0), eq(0), eq(10), any(HttpServletRequest.class));
     }
 
     @Test
@@ -121,8 +123,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -132,8 +134,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -143,8 +145,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -154,8 +156,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -165,8 +167,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -176,8 +178,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     @Test
@@ -187,8 +189,8 @@ class PublicEventControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(publicEventService, never())
-                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(),
-                        any(SortByType.class), anyInt(), anyInt(), any(HttpServletRequest.class));
+                .getEvents(anyString(), anyList(), anyBoolean(), any(), any(), anyBoolean(), any(SortByType.class),
+                        anyDouble(), anyDouble(), anyDouble(), anyInt(), anyInt(), any(HttpServletRequest.class));
     }
 
     // ============ GET /events/{id} ============
